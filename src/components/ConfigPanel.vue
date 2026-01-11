@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { useChatStore } from '../stores/chat'
+import { useCorpusStore } from '../stores/corpus'
 import html2canvas from 'html2canvas'
 
 const chatStore = useChatStore()
+const corpusStore = useCorpusStore()
 const currentMode = ref<'chat' | 'join'>('chat')
 const genCount = ref(20)
 const downloadCount = ref(3)
 const isDownloading = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
+  await corpusStore.initDB()
   // 初始进入自动生成20条对话，避免空白
   chatStore.batchAddRandomDialog(20)
 })

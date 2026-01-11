@@ -5,6 +5,8 @@ import { useCorpusStore } from '../stores/corpus'
 const corpusStore = useCorpusStore()
 const activeTab = ref<'dialogue' | 'system'>('dialogue')
 const newContent = ref('')
+const isBusy = ref(false)
+const importInput = ref<HTMLInputElement | null>(null)
 
 const items = computed(() => {
   return activeTab.value === 'dialogue' ? corpusStore.dialogues : corpusStore.systems
@@ -25,6 +27,62 @@ const handleDelete = async (id: number) => {
     await corpusStore.deleteEntry(id)
   }
 }
+
+const handleClearAll = async () => {
+  if (!confirm('确定要清空本地语料库吗？此操作不可恢复。')) return
+  isBusy.value = true
+  try {
+    await corpusStore.clearAll()
+  } finally {
+    isBusy.value = false
+  }
+}
+
+const handleExport = async () => {
+  isBusy.value = true
+  try {
+    const data = await corpusStore.exportAll()
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const link = document.createElement('a')
+    link.download = `wechat-corpus-${Date.now()}.json`
+    link.href = URL.createObjectURL(blob)
+    link.click()
+    URL.revokeObjectURL(link.href)
+  } finally {
+    isBusy.value = false
+  }
+}
+
+const handleImportClick = () => {
+  importInput.value?.click()
+}
+
+const handleImport = async (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  isBusy.value = true
+  try {
+    const text = await file.text()
+    const parsed = JSON.parse(text) as {
+      dialogues?: string[]
+      systems?: string[]
+      items?: { type: 'dialogue' | 'system'; content: string }[]
+    }
+    const dialogues = Array.isArray(parsed.dialogues) ? parsed.dialogues : []
+    const systems = Array.isArray(parsed.systems) ? parsed.systems : []
+    const items = Array.isArray(parsed.items) ? parsed.items : []
+    const mergedDialogues = dialogues.concat(items.filter(i => i.type === 'dialogue').map(i => i.content))
+    const mergedSystems = systems.concat(items.filter(i => i.type === 'system').map(i => i.content))
+
+    await corpusStore.replaceAll(mergedDialogues, mergedSystems)
+  } catch (err) {
+    alert('导入失败：请确认文件格式为 JSON')
+  } finally {
+    isBusy.value = false
+    if (importInput.value) importInput.value.value = ''
+  }
+}
 </script>
 
 <template>
@@ -38,10 +96,34 @@ const handleDelete = async (id: number) => {
         </h1>
         <p class="text-white/40 text-sm tracking-widest mt-1">语料库管理</p>
       </div>
-      <router-link to="/" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm text-white transition-all flex items-center gap-2">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>
-        返回生成器
-      </router-link>
+      <div class="flex items-center gap-3">
+        <button
+          @click="handleClearAll"
+          :disabled="isBusy"
+          class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-white transition-all disabled:opacity-50"
+        >
+          清空本地
+        </button>
+        <button
+          @click="handleExport"
+          :disabled="isBusy"
+          class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-white transition-all disabled:opacity-50"
+        >
+          导出
+        </button>
+        <button
+          @click="handleImportClick"
+          :disabled="isBusy"
+          class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-white transition-all disabled:opacity-50"
+        >
+          导入
+        </button>
+        <input ref="importInput" type="file" accept="application/json" class="hidden" @change="handleImport" />
+        <router-link to="/" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm text-white transition-all flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>
+          返回生成器
+        </router-link>
+      </div>
     </div>
 
     <!-- Main Content -->

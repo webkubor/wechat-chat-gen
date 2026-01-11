@@ -18,6 +18,15 @@ export const useCorpusStore = defineStore('corpus', {
   }),
   
   actions: {
+    async openDB() {
+      return new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION)
+        request.onerror = () => reject('DB Open Error')
+        request.onsuccess = (event) => {
+          resolve((event.target as IDBOpenDBRequest).result)
+        }
+      })
+    },
     async initDB() {
       return new Promise<void>((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION)
@@ -32,11 +41,11 @@ export const useCorpusStore = defineStore('corpus', {
             
             // Seed Default Data
             const defaultDialogues = [
-              '终于等到这一天了！', '有人出杭州站的票吗？求两张！', '我在黄龙体育中心门口了，人超多！',
+              '终于等到这一天了！', '有人出本场的票吗？求两张！', '我在场馆门口了，人超多！',
               '前排兜售瓜子饮料矿泉水~', '谁有歌单啊？求分享', '激动得睡不着觉',
-              '今晚会有《稻香》吗？', '必须有啊！全场大合唱预定', '为了看杰伦特意请了假',
+              '今晚会有新歌吗？', '必须有啊！全场大合唱预定', '为了看演出特意请了假',
               '听说今晚有神秘嘉宾？', '真的假的？是谁啊？', '大家要注意防诈骗哦',
-              '周董YYDS！', '已经在检票口排队了', '天气不错，适合听演唱会',
+              '舞台效果太顶了！', '已经在检票口排队了', '天气不错，适合听演唱会',
               '有没有组队入场的？', '刚才在门口看到保姆车了！', '心跳已经120了'
             ]
             const defaultSystems = [
@@ -75,6 +84,51 @@ export const useCorpusStore = defineStore('corpus', {
             this.systems = allItems.filter(i => i.type === 'system')
             resolve()
           }
+        }
+      })
+    },
+    async clearAll() {
+      const db = await this.openDB()
+      return new Promise<void>((resolve) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite')
+        const store = tx.objectStore(STORE_NAME)
+        store.clear()
+        tx.oncomplete = async () => {
+          await this.loadAll()
+          resolve()
+        }
+      })
+    },
+    async exportAll() {
+      const db = await this.openDB()
+      return new Promise<{ dialogues: string[]; systems: string[] }>((resolve) => {
+        const tx = db.transaction(STORE_NAME, 'readonly')
+        const store = tx.objectStore(STORE_NAME)
+        const getAll = store.getAll()
+        getAll.onsuccess = () => {
+          const allItems = getAll.result as CorpusItem[]
+          resolve({
+            dialogues: allItems.filter(i => i.type === 'dialogue').map(i => i.content),
+            systems: allItems.filter(i => i.type === 'system').map(i => i.content)
+          })
+        }
+      })
+    },
+    async replaceAll(dialogues: string[], systems: string[]) {
+      const db = await this.openDB()
+      return new Promise<void>((resolve) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite')
+        const store = tx.objectStore(STORE_NAME)
+        store.clear()
+        dialogues.forEach(text => {
+          if (text && text.trim()) store.add({ type: 'dialogue', content: text })
+        })
+        systems.forEach(text => {
+          if (text && text.trim()) store.add({ type: 'system', content: text })
+        })
+        tx.oncomplete = async () => {
+          await this.loadAll()
+          resolve()
         }
       })
     },

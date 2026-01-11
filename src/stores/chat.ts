@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useCorpusStore } from './corpus'
 import defaultBg from '../assets/bg.jpg'
 
 export type MessageType = 'text' | 'system' | 'image'
@@ -18,7 +19,7 @@ export interface Message {
 
 export const useChatStore = defineStore('chat', {
   state: () => ({
-    groupTitle: '周杰伦杭州站粉丝交流群',
+    groupTitle: '演唱会粉丝交流群',
     memberCount: 188,
     nicknameColor: '#adadad',
     nicknameSize: 11,
@@ -54,12 +55,12 @@ export const useChatStore = defineStore('chat', {
     getRandomUser() {
       // 真实微信昵称库
       const names = [
-        'AAA建材王总', '水晶女孩', 'Jay迷-小凯', '晴天', '一路向北', 
-        '简单爱', '范特西', '告白气球', '七里香', '稻香', 
-        '夜曲', '以父之名', '搁浅', '东风破', '发如雪',
+        'AAA建材王总', '水晶女孩', '追光者', '晚风', '向日葵',
+        '简单快乐', '星光收集者', '小幸运', '纸飞机', '晴空',
+        '夜行者', '以梦为马', '搁浅的鲸', '东篱', '发光体',
         '快乐小狗', 'momo', '用户88291', '卡布奇诺', '往事随风',
         '花开富贵', '除了帅一无所有', '只是近黄昏', '小仙女', '大魔王',
-        '我是你的优乐美', '周杰伦的奶茶', '叶惠美', '半岛铁盒', '龙卷风',
+        '我的奶茶', '山川与海', '半岛来信', '风筝与猫', '龙卷风',
         '淡泊人生', '云淡风轻', '往事如烟', '奋斗中的小李', '逆流而上',
         'Cc', 'David', 'Lisa', 'Mike', 'Tom', 'Jerry'
       ]
@@ -125,12 +126,17 @@ export const useChatStore = defineStore('chat', {
       })
     },
     batchAddJoinMessages(count: number) {
+      const corpusStore = useCorpusStore()
+      const templates = corpusStore.systems.length
+        ? corpusStore.systems.map(item => item.content)
+        : this.systemTemplates
+
       for (let i = 0; i < count; i++) {
         const inviter = this.getRandomUser()
         const invited = this.getRandomUser()
         const other = this.getRandomUser()
         
-        const template = this.systemTemplates[Math.floor(Math.random() * this.systemTemplates.length)] || '"{name}"邀请"{invited}"加入了群聊'
+        const template = templates[Math.floor(Math.random() * templates.length)] || '"{name}"邀请"{invited}"加入了群聊'
         
         const content = template
           .replace('{name}', `<span class="system-name">${inviter.name}</span>`)
@@ -151,12 +157,14 @@ export const useChatStore = defineStore('chat', {
         this.currentUser = { name: '我', avatar: randomMe.avatar }
       }
 
-      const hypes = [
-        '终于等到这一天了！', '有人出杭州站的票吗？求两张！', '我在黄龙体育中心门口了，人超多！',
+      const corpusStore = useCorpusStore()
+      const corpusDialogues = corpusStore.dialogues.map(item => item.content).filter(Boolean)
+      const hypes = corpusDialogues.length ? corpusDialogues : [
+        '终于等到这一天了！', '有人出本场的票吗？求两张！', '我在场馆门口了，人超多！',
         '前排兜售瓜子饮料矿泉水~', '谁有歌单啊？求分享', '激动得睡不着觉',
-        '今晚会有《稻香》吗？', '必须有啊！全场大合唱预定', '为了看杰伦特意请了假',
+        '今晚会有新歌吗？', '必须有啊！全场大合唱预定', '为了看演出特意请了假',
         '听说今晚有神秘嘉宾？', '真的假的？是谁啊？', '大家要注意防诈骗哦',
-        '周董YYDS！', '已经在检票口排队了', '天气不错，适合听演唱会',
+        '舞台效果太顶了！', '已经在检票口排队了', '天气不错，适合听演唱会',
         '有没有组队入场的？', '刚才在门口看到保姆车了！', '心跳已经120了'
       ]
       
