@@ -132,7 +132,6 @@ export const useChatStore = defineStore('chat', {
         
         const template = this.systemTemplates[Math.floor(Math.random() * this.systemTemplates.length)] || '"{name}"邀请"{invited}"加入了群聊'
         
-        // 使用 class 控制昵称样式，方便动态修改字体和大小
         const content = template
           .replace('{name}', `<span class="system-name">${inviter.name}</span>`)
           .replace('{invited}', `<span class="system-name">${invited.name}</span>`)
@@ -175,6 +174,16 @@ export const useChatStore = defineStore('chat', {
           sender,
           isMe
         })
+      }
+    },
+    updateMessage(id: string, field: 'content' | 'name', value: string) {
+      const msg = this.messages.find(m => m.id === id)
+      if (msg) {
+        if (field === 'content') {
+          msg.content = value
+        } else if (field === 'name' && msg.sender) {
+          msg.sender.name = value
+        }
       }
     }
   }

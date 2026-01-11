@@ -36,7 +36,9 @@ const WECHAT_GREEN = '#95ec69'
           <!-- Name for group chat (only others) -->
           <div 
             v-if="!msg.isMe" 
-            class="mb-0.5 ml-0.5 scale-90 origin-bottom-left"
+            class="mb-0.5 ml-0.5 scale-90 origin-bottom-left outline-none min-w-[20px]"
+            contenteditable
+            @blur="(e) => chatStore.updateMessage(msg.id, 'name', (e.target as HTMLElement).innerText)"
             :style="{ 
               color: chatStore.nicknameColor,
               fontSize: chatStore.nicknameSize + 'px',
@@ -49,10 +51,12 @@ const WECHAT_GREEN = '#95ec69'
           <!-- Bubble -->
           <div 
             :class="[
-              'relative px-[11px] py-[9px] text-[15px] leading-[22px] rounded-[6px] max-w-[240px] break-words shadow-[0_1px_1px_rgba(0,0,0,0.05)] text-[#191919]',
+              'relative px-[11px] py-[9px] text-[15px] leading-[22px] rounded-[6px] max-w-[240px] break-words shadow-[0_1px_1px_rgba(0,0,0,0.05)] text-[#191919] outline-none',
               msg.isMe ? `bg-[${WECHAT_GREEN}]` : 'bg-white'
             ]"
             :style="msg.isMe ? `background-color: ${WECHAT_GREEN}` : ''"
+            contenteditable
+            @blur="(e) => chatStore.updateMessage(msg.id, 'content', (e.target as HTMLElement).innerText)"
           >
             {{ msg.content }}
             
