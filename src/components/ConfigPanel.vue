@@ -38,6 +38,17 @@ const handleBgUpload = (e: Event) => {
   }
 }
 
+const handleAvatarUpload = (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      chatStore.setCurrentUserAvatar(ev.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
 const handleGenerate = () => {
   chatStore.clearMessages()
   if (currentMode.value === 'join') {
@@ -139,6 +150,16 @@ const handleBatchDownload = async () => {
           <label class="flex items-center justify-center w-full h-[46px] bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-xl cursor-pointer transition-all duration-300 group hover:border-[#7A9D8C]/50">
             <span class="text-xs text-white/40 group-hover:text-[#7A9D8C] transition-colors">上传图片</span>
             <input type="file" @change="handleBgUpload" accept="image/*" class="hidden" />
+          </label>
+        </div>
+        <div>
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">我的头像</label>
+          <label class="flex items-center justify-center w-full h-[46px] bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-xl cursor-pointer transition-all duration-300 group hover:border-[#7A9D8C]/50 overflow-hidden">
+            <span v-if="!chatStore.currentUser.avatar" class="text-xs text-white/40 group-hover:text-[#7A9D8C] transition-colors">上传头像</span>
+            <div v-else class="w-10 h-10 rounded-[10px] overflow-hidden">
+              <img :src="chatStore.currentUser.avatar" class="w-full h-full object-cover object-center" />
+            </div>
+            <input type="file" @change="handleAvatarUpload" accept="image/*" class="hidden" />
           </label>
         </div>
         <div>

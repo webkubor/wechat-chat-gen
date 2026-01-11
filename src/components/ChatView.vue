@@ -23,7 +23,7 @@ const WECHAT_GREEN = '#95ec69'
       <div v-else :class="['flex gap-2.5 items-start', msg.isMe ? 'flex-row-reverse' : 'flex-row']">
         <!-- Avatar -->
         <div 
-          class="w-10 h-10 rounded-[4px] overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200/50"
+          class="w-10 h-10 rounded-[4px] overflow-hidden flex-shrink-0 bg-gray-100"
         >
           <img v-if="msg.sender?.avatar" :src="msg.sender.avatar" class="w-full h-full object-cover" />
           <div v-else class="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 font-bold text-sm">

@@ -52,6 +52,9 @@ export const useChatStore = defineStore('chat', {
     setBg(url: string) {
       this.backgroundImage = url
     },
+    setCurrentUserAvatar(avatar: string) {
+      this.currentUser = { ...this.currentUser, avatar }
+    },
     getRandomUser() {
       // 真实微信昵称库
       const names = [
