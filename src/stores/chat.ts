@@ -26,11 +26,11 @@ export const useChatStore = defineStore('chat', {
     currentUser: { name: '我', avatar: '' }, // Placeholder, init in action or getter if needed, but simple obj here is fine if we init in getRandomUser logic context
     messages: [] as Message[],
     systemTemplates: [
-      '"{name}"邀请"{invited}"加入了群聊',
-      '"{invited}"通过扫描"{name}"分享的二维码加入群聊',
-      '"{name}"邀请"{invited}"加入了群聊，群聊参与人还有：{other}',
-      '"{invited}"通过群链接加入群聊',
-      '你邀请"{invited}"加入了群聊'
+      '{name}邀请{invited}加入了群聊',
+      '{invited}通过扫描{name}分享的二维码加入群聊',
+      '{invited}通过群成员{name}分享的二维码加入群聊',
+      '{name}邀请{invited}、{other}加入了群聊',
+      '{invited}加入了群聊'
     ]
   }),
   actions: {
@@ -128,9 +128,9 @@ export const useChatStore = defineStore('chat', {
         const template = this.systemTemplates[Math.floor(Math.random() * this.systemTemplates.length)] || '"{name}"邀请"{invited}"加入了群聊'
         
         const content = template
-          .replace('{name}', inviter.name)
-          .replace('{invited}', invited.name)
-          .replace('{other}', other.name)
+          .replace('{name}', `<span style="color: #7d90a9">${inviter.name}</span>`)
+          .replace('{invited}', `<span style="color: #7d90a9">${invited.name}</span>`)
+          .replace('{other}', `<span style="color: #7d90a9">${other.name}</span>`)
 
         this.messages.push({
           id: Math.random().toString(36).substr(2, 9),

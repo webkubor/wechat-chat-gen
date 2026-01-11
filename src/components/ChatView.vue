@@ -10,10 +10,12 @@ const WECHAT_GREEN = '#95ec69'
   <div class="p-4 space-y-4 pb-4 pt-2">
     <div v-for="msg in chatStore.messages" :key="msg.id" class="flex flex-col">
       <!-- System Message -->
-      <div v-if="msg.type === 'system'" class="flex justify-center my-1.5">
-        <span class="bg-[#dadada]/80 text-white text-[12px] px-2 py-0.5 rounded-[4px] leading-tight max-w-[80%] text-center shadow-sm backdrop-blur-[1px]">
-          {{ msg.content }}
-        </span>
+      <div v-if="msg.type === 'system'" class="flex justify-center my-1">
+        <div 
+          class="bg-white/15 text-white/90 text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block"
+          v-html="msg.content"
+        >
+        </div>
       </div>
 
       <!-- Normal Message -->

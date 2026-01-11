@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useChatStore } from '../stores/chat'
+import html2canvas from 'html2canvas'
 
 const chatStore = useChatStore()
 const currentMode = ref<'chat' | 'join'>('chat')
 const genCount = ref(20)
+const downloadCount = ref(3)
+const isDownloading = ref(false)
 
 onMounted(() => {
   // 初始进入自动生成20条对话，避免空白
@@ -33,10 +36,55 @@ const handleBgUpload = (e: Event) => {
 }
 
 const handleGenerate = () => {
+  chatStore.clearMessages()
   if (currentMode.value === 'join') {
     chatStore.batchAddJoinMessages(genCount.value)
   } else {
     chatStore.batchAddRandomDialog(genCount.value)
+  }
+}
+
+const downloadImage = async (index: number) => {
+  const element = document.getElementById('wechat-screen')
+  if (!element) return
+
+  try {
+    const canvas = await html2canvas(element, {
+      useCORS: true,
+      scale: 2, // 高清导出
+      backgroundColor: '#ededed',
+      logging: false,
+      allowTaint: true
+    })
+
+    const link = document.createElement('a')
+    link.download = `wechat-gen-${Date.now()}-${index + 1}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  } catch (err) {
+    console.error('Export failed:', err)
+  }
+}
+
+const handleBatchDownload = async () => {
+  if (isDownloading.value) return
+  isDownloading.value = true
+  
+  try {
+    for (let i = 0; i < downloadCount.value; i++) {
+      // 1. 生成新内容
+      handleGenerate()
+      
+      // 2. 等待 DOM 更新和头像图片加载
+      await nextTick()
+      // 增加延时确保图片加载完成
+      await new Promise(resolve => setTimeout(resolve, 1500)) 
+      
+      // 3. 截图下载
+      await downloadImage(i)
+    }
+  } finally {
+    isDownloading.value = false
   }
 }
 </script>
@@ -98,7 +146,7 @@ const handleGenerate = () => {
               type="color" 
               class="w-8 h-8 bg-transparent border-none cursor-pointer"
             />
-            <span class="text-[10px] text-white/60 font-mono">{{ chatStore.nicknameColor }}</span>
+            <span class="text-[10px] text-white/60 font-mono text-xs">{{ chatStore.nicknameColor }}</span>
           </div>
         </div>
       </div>
@@ -108,7 +156,7 @@ const handleGenerate = () => {
     <div class="space-y-5 pt-4 border-t border-white/5">
       <div class="flex items-center gap-2 mb-2">
          <div class="w-1 h-4 bg-[#A27B5C] rounded-full"></div>
-         <h3 class="text-sm font-medium text-white/80 tracking-wide">生成模式</h3>
+         <h3 class="text-sm font-medium text-white/80 tracking-wide">生成与导出</h3>
       </div>
 
       <!-- Mode Switcher (Glass Pill) -->
@@ -136,34 +184,58 @@ const handleGenerate = () => {
       </div>
 
       <!-- Unified Generation UI -->
-      <div class="p-5 bg-white/5 rounded-2xl border border-white/5 space-y-5">
+      <div class="p-5 bg-white/5 rounded-2xl border border-white/5 space-y-6">
         <div>
           <div class="flex justify-between items-end mb-3">
-             <label class="text-[10px] font-medium text-white/40 uppercase tracking-widest">生成数量</label>
+             <label class="text-[10px] font-medium text-white/40 uppercase tracking-widest">单张内容量</label>
              <span class="text-xs font-bold text-[#7A9D8C]">{{ genCount }} <span class="text-[10px] font-normal text-white/30">条</span></span>
           </div>
-          <div class="flex items-center gap-4">
-            <input 
-              v-model.number="genCount" 
-              type="range" min="1" max="100" 
-              class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#7A9D8C]"
-            />
-          </div>
+          <input 
+            v-model.number="genCount" 
+            type="range" min="5" max="50" 
+            class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#7A9D8C]"
+          />
         </div>
 
-        <button 
-          @click="handleGenerate" 
-          class="w-full py-4 bg-[#7A9D8C] hover:bg-[#6B8E78] text-white rounded-xl font-medium text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] hover:shadow-[0_15px_35px_-10px_rgba(122,157,140,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] flex items-center justify-center gap-2 tracking-wide"
-        >
-          <span v-if="currentMode === 'chat'">一键生成群聊对话</span>
-          <span v-else>一键生成入群记录</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="opacity-80">
-            <path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
+        <div>
+          <div class="flex justify-between items-end mb-3">
+             <label class="text-[10px] font-medium text-white/40 uppercase tracking-widest">一键导出张数</label>
+             <span class="text-xs font-bold text-[#A27B5C]">{{ downloadCount }} <span class="text-[10px] font-normal text-white/30">张</span></span>
+          </div>
+          <input 
+            v-model.number="downloadCount" 
+            type="range" min="1" max="10" 
+            class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#A27B5C]"
+          />
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <button 
+            @click="handleGenerate" 
+            class="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]"
+          >
+            仅刷新预览
+          </button>
+          
+          <button 
+            @click="handleBatchDownload" 
+            :disabled="isDownloading"
+            class="w-full py-4 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            <span v-if="!isDownloading">🚀 一键批量下载成品图</span>
+            <span v-else class="flex items-center gap-2">
+              <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              正在导出中...
+            </span>
+          </button>
+        </div>
         
-        <p class="text-center text-[10px] text-white/30 tracking-wide">
-          根据选定模式自动生成逼真的群聊内容
+        <p class="text-center text-[10px] text-white/30 tracking-wide leading-relaxed">
+          点击一键下载将自动循环生成新内容并导出高清图片<br/>
+          (浏览器可能会拦截多文件下载，请注意允许)
         </p>
       </div>
     </div>
@@ -193,4 +265,3 @@ input[type=range]::-webkit-slider-thumb:hover {
   transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 </style>
-
