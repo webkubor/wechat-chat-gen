@@ -203,6 +203,42 @@ const handleBatchDownload = async () => {
         </div>
       </div>
 
+      <!-- New row for Status Bar -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="group">
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">顶部时间</label>
+          <input
+            v-model="chatStore.statusBarTime"
+            type="text"
+            placeholder="23:30"
+            class="w-full bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white font-mono focus:outline-none transition-all"
+          />
+        </div>
+        <div class="group">
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">顶部主题</label>
+          <div class="relative">
+            <select v-model="chatStore.statusBarTheme" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white focus:outline-none transition-all cursor-pointer">
+              <option value="dark" class="text-gray-900">黑色图标</option>
+              <option value="light" class="text-gray-900">白色图标</option>
+            </select>
+            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="group">
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">预览主题</label>
+          <div class="relative">
+            <select v-model="chatStore.previewTheme" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white focus:outline-none transition-all cursor-pointer">
+              <option value="light" class="text-gray-900">浅色</option>
+              <option value="dark" class="text-gray-900">深色</option>
+            </select>
+            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
+          </div>
+        </div>
+      </div>
+
       <!-- New row for System Message Colors -->
       <div class="grid grid-cols-2 gap-4">
         <div class="group">

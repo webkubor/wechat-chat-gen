@@ -4,6 +4,8 @@ import defaultBg from '../assets/bg.jpg'
 
 export type MessageType = 'text' | 'system' | 'image'
 export type DeviceType = 'ios' | 'android'
+export type StatusBarTheme = 'light' | 'dark'
+export type PreviewTheme = 'light' | 'dark'
 
 export interface Message {
   id: string
@@ -29,6 +31,9 @@ export const useChatStore = defineStore('chat', {
     isHighlightingCapture: false,
     backgroundImage: defaultBg,
     deviceType: 'ios' as DeviceType,
+    statusBarTheme: 'dark' as StatusBarTheme,
+    statusBarTime: '23:30',
+    previewTheme: 'light' as PreviewTheme,
     currentUser: { name: '我', avatar: '' }, // Placeholder, init in action or getter if needed, but simple obj here is fine if we init in getRandomUser logic context
     messages: [] as Message[],
     systemTemplates: [

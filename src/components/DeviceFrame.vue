@@ -28,50 +28,63 @@ watch(() => chatStore.messages.length, () => {
       ]"
     >
       <!-- Screen Content Container -->
-      <div 
-        class="w-full h-full bg-[#ededed] relative flex flex-col"
-        :style="{
-          backgroundImage: chatStore.backgroundImage ? `url(${chatStore.backgroundImage})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundColor: '#ededed'
-        }"
-      >
+        <div 
+          class="w-full h-full relative flex flex-col"
+          :style="{
+            backgroundImage: chatStore.backgroundImage ? `url(${chatStore.backgroundImage})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundColor: chatStore.previewTheme === 'dark' ? '#0f0f10' : '#ededed'
+          }"
+        >
         <!-- Top Navigation Area (Status Bar + WeChat Header) -->
-        <div class="relative z-30 bg-[#ededed] border-b border-black/5 flex flex-col">
+        <div
+          class="relative z-30 border-b flex flex-col"
+          :class="chatStore.previewTheme === 'dark' ? 'bg-[#1c1c1e] border-white/5' : 'bg-[#ededed] border-black/5'"
+        >
           
           <!-- iOS Status Bar -->
           <div v-if="chatStore.deviceType === 'ios'" class="w-full relative">
             <!-- Notch -->
             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[160px] h-[32px] bg-black rounded-b-[20px] z-50"></div>
             <!-- Status Bar Items -->
-            <div class="flex justify-between items-start px-6 pt-3 text-black font-semibold text-[15px] h-[44px]">
-              <span>9:41</span>
-              <div class="flex gap-1.5 items-center">
-                <!-- Signal -->
-                <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor">
-                  <rect x="0" y="7" width="3" height="4" rx="0.5" />
-                  <rect x="4" y="5" width="3" height="6" rx="0.5" />
-                  <rect x="8" y="3" width="3" height="8" rx="0.5" />
-                  <rect x="12" y="0" width="3" height="11" rx="0.5" />
+            <div
+              class="flex justify-between items-center px-6 pt-3 font-semibold text-[15px] h-[44px]"
+              :class="chatStore.statusBarTheme === 'light' ? 'text-white' : 'text-black'"
+            >
+              <div class="flex items-center gap-2">
+                <span>{{ chatStore.statusBarTime }}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" :class="chatStore.statusBarTheme === 'light' ? 'text-white/90' : 'text-black/90'">
+                  <path d="M21 15.5A9.5 9.5 0 1 1 8.5 3a7.5 7.5 0 1 0 12.5 12.5Z"></path>
                 </svg>
+              </div>
+              <div class="flex gap-2 items-center">
+                <!-- Signal -->
+                <div class="flex items-end gap-0.5">
+                  <span :class="chatStore.statusBarTheme === 'light' ? 'bg-white/90' : 'bg-black/90'" class="w-1 h-1 rounded-full"></span>
+                  <span :class="chatStore.statusBarTheme === 'light' ? 'bg-white/90' : 'bg-black/90'" class="w-1 h-2 rounded-full"></span>
+                  <span :class="chatStore.statusBarTheme === 'light' ? 'bg-white/90' : 'bg-black/90'" class="w-1 h-3 rounded-full"></span>
+                  <span :class="chatStore.statusBarTheme === 'light' ? 'bg-white/90' : 'bg-black/90'" class="w-1 h-4 rounded-full"></span>
+                </div>
                 <!-- WiFi -->
-                <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor">
-                  <path d="M7.5 11C9.15685 11 10.5 9.65685 10.5 8C10.5 6.34315 9.15685 5 7.5 5C5.84315 5 4.5 6.34315 4.5 8C4.5 9.65685 5.84315 11 7.5 11Z" />
-                  <path d="M7.5 0C3.35786 0 0 3.35786 0 7.5H2C2 4.46243 4.46243 2 7.5 2C10.5376 2 13 4.46243 13 7.5H15C15 3.35786 11.6421 0 7.5 0Z" opacity="0.3" />
+                <svg width="18" height="12" viewBox="0 0 24 16" fill="none" :class="chatStore.statusBarTheme === 'light' ? 'text-white/90' : 'text-black/90'">
+                  <path d="M2 6.5C6.5 2.5 17.5 2.5 22 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M5 9.5C8.5 6.8 15.5 6.8 19 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M9 12.5C10.5 11.3 13.5 11.3 15 12.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <circle cx="12" cy="14" r="1.2" fill="currentColor"></circle>
                 </svg>
                 <!-- Battery -->
-                <div class="w-6 h-3 border border-black/30 rounded-[3px] relative ml-0.5">
-                   <div class="absolute top-0.5 left-0.5 bottom-0.5 w-[80%] bg-black rounded-[1px]"></div>
-                   <div class="absolute -right-1 top-1 w-0.5 h-1 bg-black/30 rounded-r-sm"></div>
+                <div class="w-7 h-[13px] rounded-[4px] relative" :class="chatStore.statusBarTheme === 'light' ? 'border border-white/90' : 'border border-black/80'">
+                  <div class="absolute top-[1.5px] left-[1.5px] bottom-[1.5px] w-[70%] rounded-[3px]" :class="chatStore.statusBarTheme === 'light' ? 'bg-white/90' : 'bg-black/90'"></div>
+                  <div class="absolute -right-[2.5px] top-[3.5px] w-[2px] h-[6px] rounded-sm" :class="chatStore.statusBarTheme === 'light' ? 'bg-white/90' : 'bg-black/80'"></div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Android Status Bar -->
-          <div v-if="chatStore.deviceType === 'android'" class="w-full h-7 flex justify-between items-center px-4 text-xs text-black/70 font-medium">
-            <span>12:30</span>
+          <div v-if="chatStore.deviceType === 'android'" class="w-full h-7 flex justify-between items-center px-4 text-xs font-medium" :class="chatStore.statusBarTheme === 'light' ? 'text-white/80' : 'text-black/70'">
+            <span>{{ chatStore.statusBarTime }}</span>
             <div class="flex gap-2 items-center">
               <span>5G</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
@@ -80,9 +93,10 @@ watch(() => chatStore.messages.length, () => {
           </div>
 
           <!-- WeChat Header Content -->
-          <div 
+          <div
             :class="[
-              'flex items-center justify-between text-[#181818]',
+              'flex items-center justify-between',
+              chatStore.previewTheme === 'dark' ? 'text-white' : 'text-[#181818]',
               chatStore.deviceType === 'ios' ? 'pb-2.5 px-2' : 'h-12 px-4'
             ]"
           >
@@ -114,31 +128,44 @@ watch(() => chatStore.messages.length, () => {
         <!-- Bottom Input Bar (Simulated) -->
         <div class="relative z-20">
           <div class="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-black/10 to-transparent pointer-events-none"></div>
-          <div class="bg-[#f2f2f7]/95 backdrop-blur-md border-t border-black/10 px-3 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]">
-            <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center text-gray-600">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-gray-600">
+        <div
+          class="backdrop-blur-md border-t px-3 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]"
+          :class="chatStore.previewTheme === 'dark' ? 'bg-[#1f1f22]/95 border-white/10' : 'bg-[#f2f2f7]/95 border-black/10'"
+        >
+          <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center" :class="chatStore.previewTheme === 'dark' ? 'text-white/80' : 'text-gray-600'">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                   <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                   <line x1="12" x2="12" y1="19" y2="22"></line>
                 </svg>
               </div>
-              <div class="flex-1 h-[36px] bg-white rounded-full border border-black/10 shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.08)]"></div>
-              <div class="w-8 h-8 flex items-center justify-center text-gray-600">
+              <div
+                class="flex-1 h-[36px] rounded-full border shadow-[inset_0_1px_1.5px_rgba(0,0,0,0.08)]"
+                :class="chatStore.previewTheme === 'dark' ? 'bg-[#2a2a2e] border-white/10' : 'bg-white border-black/10'"
+              ></div>
+              <div class="w-8 h-8 flex items-center justify-center" :class="chatStore.previewTheme === 'dark' ? 'text-white/80' : 'text-gray-600'">
                 <span class="text-[20px] leading-none">☺</span>
               </div>
               <div class="w-8 h-8 flex items-center justify-center">
-                <span class="text-[18px] text-gray-700 border border-gray-500/70 rounded-full h-[22px] w-[22px] flex items-center justify-center font-light leading-none">+</span>
+                <span
+                  class="text-[18px] rounded-full h-[22px] w-[22px] flex items-center justify-center font-light leading-none border"
+                  :class="chatStore.previewTheme === 'dark' ? 'text-white/80 border-white/60' : 'text-gray-700 border-gray-500/70'"
+                >+</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- iOS Home Indicator -->
-        <div v-if="chatStore.deviceType === 'ios'" class="absolute bottom-2 left-1/2 -translate-x-1/2 w-[140px] h-[5px] bg-black/80 rounded-full z-30 shadow-[0_1px_2px_rgba(0,0,0,0.35)]"></div>
+        <div
+          v-if="chatStore.deviceType === 'ios'"
+          class="absolute bottom-2 left-1/2 -translate-x-1/2 w-[140px] h-[5px] rounded-full z-30 shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
+          :class="chatStore.previewTheme === 'dark' ? 'bg-white/70' : 'bg-black/80'"
+        ></div>
 
         <!-- Android Navigation Bar -->
-        <div v-if="chatStore.deviceType === 'android'" class="h-10 bg-black flex items-center justify-around opacity-90 z-30">
+        <div v-if="chatStore.deviceType === 'android'" class="h-10 flex items-center justify-around opacity-90 z-30" :class="chatStore.previewTheme === 'dark' ? 'bg-black' : 'bg-[#1b1b1b]'">
           <div class="w-4 h-4 border-2 border-gray-400 transform rotate-45 border-r-0 border-b-0 ml-4"></div>
           <div class="w-4 h-4 border-2 border-gray-400 rounded-full"></div>
           <div class="w-4 h-4 border-2 border-gray-400 rounded-[2px] mr-4"></div>
