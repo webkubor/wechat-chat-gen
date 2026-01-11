@@ -12,6 +12,18 @@ const genCount = ref(20)
 const downloadCount = ref(3)
 const isDownloading = ref(false)
 const exportIndex = ref(0)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error'>('success')
+let toastTimer: number | null = null
+
+const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+  toastMessage.value = message
+  toastType.value = type
+  if (toastTimer) window.clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(() => {
+    toastMessage.value = ''
+  }, 2200)
+}
 
 onMounted(async () => {
   await corpusStore.initDB()
@@ -78,7 +90,7 @@ const triggerDownload = (name: string, blob: Blob) => {
 const handleQuickDownload = async () => {
   const element = document.getElementById('wechat-screen')
   if (!element) {
-    alert('未找到预览区域，无法导出')
+    showToast('未找到预览区域，无法导出', 'error')
     return
   }
 
@@ -88,21 +100,23 @@ const handleQuickDownload = async () => {
       scale: 2,
       backgroundColor: '#ededed',
       logging: false,
-      allowTaint: true
+      allowTaint: false,
+      foreignObjectRendering: true
     })
 
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, 'image/png')
     })
     if (!blob) {
-      alert('导出失败：无法生成图片')
+      showToast('导出失败：无法生成图片', 'error')
       return
     }
 
     triggerDownload(`wechat-preview-${Date.now()}.png`, blob)
   } catch (err) {
     console.error('Export failed:', err)
-    alert('导出失败，请重试')
+    const message = err instanceof Error ? err.message : '导出失败，请重试'
+    showToast(message, 'error')
   }
 }
 
@@ -111,7 +125,7 @@ const renderImageBlob = async (index: number) => {
   const header = document.getElementById('wechat-titlebar')
   const inputBar = document.getElementById('wechat-input-bar')
   if (!element || !header || !inputBar) {
-    alert('导出失败：找不到截图区域')
+    showToast('导出失败：找不到截图区域', 'error')
     return
   }
 
@@ -127,7 +141,8 @@ const renderImageBlob = async (index: number) => {
       scale: 2, // 高清导出
       backgroundColor: '#ededed',
       logging: false,
-      allowTaint: true,
+      allowTaint: false,
+      foreignObjectRendering: true,
       x: 0,
       y: cropTop,
       width: cropWidth,
@@ -139,7 +154,7 @@ const renderImageBlob = async (index: number) => {
     })
 
     if (!blob) {
-      alert('导出失败：无法生成图片')
+      showToast('导出失败：无法生成图片', 'error')
       return
     }
 
@@ -149,7 +164,8 @@ const renderImageBlob = async (index: number) => {
     }
   } catch (err) {
     console.error('Export failed:', err)
-    alert('导出失败，请重试')
+    const message = err instanceof Error ? err.message : '导出失败，请重试'
+    showToast(message, 'error')
   }
 }
 
@@ -179,6 +195,7 @@ const handleBatchDownload = async () => {
 
     const zipBlob = await zip.generateAsync({ type: 'blob' })
     triggerDownload(`wechat-gen-${Date.now()}.zip`, zipBlob)
+    showToast('导出完成，已下载 ZIP', 'success')
   } finally {
     isDownloading.value = false
     exportIndex.value = 0
@@ -187,7 +204,16 @@ const handleBatchDownload = async () => {
 </script>
 
 <template>
-  <div class="space-y-8">
+  <div class="space-y-8 relative">
+    <transition name="toast">
+      <div
+        v-if="toastMessage"
+        class="absolute top-2 right-2 z-50 px-4 py-2 rounded-xl text-xs font-medium shadow-lg backdrop-blur-md border"
+        :class="toastType === 'error' ? 'bg-red-500/20 text-red-100 border-red-400/40' : 'bg-emerald-500/20 text-emerald-100 border-emerald-400/40'"
+      >
+        {{ toastMessage }}
+      </div>
+    </transition>
     
     <!-- Section: Basics -->
     <div class="space-y-5">
@@ -475,6 +501,16 @@ const handleBatchDownload = async () => {
 </template>
 
 <style scoped>
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
 /* Custom Range Slider Styling */
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
