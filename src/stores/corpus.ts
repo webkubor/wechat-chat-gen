@@ -111,8 +111,12 @@ export const useCorpusStore = defineStore('corpus', {
           const getAll = store.getAll()
           getAll.onsuccess = () => {
             const allItems = getAll.result as CorpusItem[]
-            const customDialogues = allItems.filter(isDialogue).map(i => ({ ...i, preset: false }))
-            const customSystems = allItems.filter(isSystem).map(i => ({ ...i, preset: false }))
+            const customDialogues: DialogueItem[] = allItems
+              .filter(isDialogue)
+              .map(i => ({ ...i, preset: false }))
+            const customSystems: SystemItem[] = allItems
+              .filter(isSystem)
+              .map(i => ({ ...i, preset: false }))
             const presetDialogues: DialogueItem[] = PRESET_DIALOGUES.map((content, index) => ({
               id: -(index + 1),
               type: 'dialogue' as const,

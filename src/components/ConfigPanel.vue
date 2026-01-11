@@ -63,7 +63,7 @@ const handleGenerate = () => {
 }
 
 const downloadImage = async (index: number) => {
-  const element = document.getElementById('wechat-screen')
+  const element = document.getElementById('wechat-capture')
   if (!element) return
 
   try {
