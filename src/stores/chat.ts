@@ -102,6 +102,40 @@ export const useChatStore = defineStore('chat', {
           isMe
         })
       })
+    },
+    batchAddJoinMessages(count: number) {
+      for (let i = 0; i < count; i++) {
+        const user = this.getRandomUser()
+        this.messages.push({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'system',
+          content: (this.systemTemplates[0] || '').replace('{name}', '管理员').replace('{invited}', user.name)
+        })
+      }
+    },
+    batchAddRandomDialog(count: number) {
+      const hypes = [
+        '终于等到这一天了！', '有人出杭州站的票吗？求两张！', '我在黄龙体育中心门口了，人超多！',
+        '前排兜售瓜子饮料矿泉水~', '谁有歌单啊？求分享', '激动得睡不着觉',
+        '今晚会有《稻香》吗？', '必须有啊！全场大合唱预定', '为了看杰伦特意请了假',
+        '听说今晚有神秘嘉宾？', '真的假的？是谁啊？', '大家要注意防诈骗哦',
+        '周董YYDS！', '已经在检票口排队了', '天气不错，适合听演唱会',
+        '有没有组队入场的？', '刚才在门口看到保姆车了！', '心跳已经120了'
+      ]
+      
+      for (let i = 0; i < count; i++) {
+        const isMe = Math.random() > 0.8
+        const content = hypes[Math.floor(Math.random() * hypes.length)] || '...'
+        const sender = isMe ? { name: '我', avatar: '' } : this.getRandomUser()
+        
+        this.messages.push({
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'text',
+          content,
+          sender,
+          isMe
+        })
+      }
     }
   }
 })

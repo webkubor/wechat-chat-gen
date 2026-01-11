@@ -5,44 +5,39 @@ import ConfigPanel from './components/ConfigPanel.vue'
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col items-center justify-center p-4 md:p-8 gap-8 md:gap-16">
+  <div class="min-h-screen bg-[#111827] text-white flex flex-col">
     
-    <div class="flex flex-col md:flex-row w-full max-w-7xl items-start justify-center gap-12">
-      <!-- Left: Preview Area -->
-      <div class="flex-1 flex flex-col items-center sticky top-8">
-        <div class="mb-6 text-center">
-          <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-2">
-            WeChat Gen
-          </h1>
-          <p class="text-gray-400 text-sm">Real-time Preview</p>
-        </div>
+    <div class="flex-1 flex flex-col md:flex-row w-full h-full">
+      <!-- Left: Preview Area (Takes more space now) -->
+      <div class="flex-1 flex items-center justify-center p-4 bg-[#0b0f19] relative overflow-hidden">
+        <!-- Background decoration -->
+        <div class="absolute inset-0 bg-gradient-to-br from-green-900/10 to-blue-900/10 pointer-events-none"></div>
         
-        <DeviceFrame>
-          <ChatView />
-        </DeviceFrame>
+        <div class="transform scale-[0.85] md:scale-90 lg:scale-100 transition-transform duration-300 origin-center">
+          <DeviceFrame>
+            <ChatView />
+          </DeviceFrame>
+        </div>
       </div>
 
-      <!-- Right: Control Panel -->
-      <div class="flex-1 w-full max-w-lg">
-        <div class="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
-          <div class="mb-6 pb-4 border-b border-gray-700">
-            <h2 class="text-xl font-bold text-white flex items-center gap-2">
-              <span>⚙️</span> 编辑器配置
-            </h2>
-            <p class="text-gray-400 text-xs mt-1">Custom your chat details</p>
-          </div>
-          
+      <!-- Right: Control Panel (Fixed width) -->
+      <div class="w-full md:w-[400px] bg-gray-900 border-l border-gray-800 flex flex-col h-[50vh] md:h-screen overflow-hidden">
+        <div class="p-6 border-b border-gray-800">
+          <h1 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
+            WeChat Gen
+          </h1>
+          <p class="text-gray-500 text-xs mt-1">Chat Simulator & Generator</p>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 scrollbar-thin">
           <ConfigPanel />
-
-          <!-- Tips Section -->
-          <div class="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg text-sm text-blue-300">
-            <p class="font-semibold mb-2 flex items-center gap-2">💡 Pro Tips:</p>
-            <ul class="list-disc ml-4 space-y-1.5 opacity-80 text-xs">
-              <li>推荐上传 <strong>9:19</strong> 比例的图片作为壁纸效果最佳</li>
-              <li>使用 "截图工具" 或直接保存网页图片即可导出</li>
-              <li>支持批量粘贴姓名，一行一个自动生成入群消息</li>
-            </ul>
-          </div>
+          
+           <!-- Footer in Panel -->
+          <footer class="mt-8 pt-8 border-t border-gray-800 text-center">
+            <p class="text-xs text-gray-500 mb-1">如果有问题, 请发</p>
+            <a href="mailto:webkubor@163.com" class="text-sm font-medium text-gray-400 hover:text-green-400 transition-colors">webkubor@163.com</a>
+            <p class="text-[10px] text-gray-600 mt-2 tracking-widest uppercase">© 2026 WeChat Gen</p>
+          </footer>
         </div>
       </div>
     </div>
@@ -54,20 +49,21 @@ body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: #111827;
+  overflow: hidden; /* Prevent body scroll if we want app-like feel */
 }
 
-/* Custom Scrollbar for the whole page if needed, though we hide it in frame */
-::-webkit-scrollbar {
-  width: 8px;
+/* Custom Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
 }
-::-webkit-scrollbar-track {
+.scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
 }
-::-webkit-scrollbar-thumb {
+.scrollbar-thin::-webkit-scrollbar-thumb {
   background: #374151;
-  border-radius: 4px;
+  border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
 }
 </style>
