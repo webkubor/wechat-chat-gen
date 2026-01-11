@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useChatStore } from '../stores/chat'
 
 const chatStore = useChatStore()
-const currentMode = ref<'join' | 'chat'>('chat')
+const currentMode = ref<'chat' | 'join'>('chat')
 const genCount = ref(20)
+
+onMounted(() => {
+  // 初始进入自动生成20条对话，避免空白
+  chatStore.batchAddRandomDialog(20)
+})
 
 const handleBgUpload = (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]

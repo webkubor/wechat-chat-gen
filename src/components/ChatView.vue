@@ -4,33 +4,6 @@ import { useChatStore } from '../stores/chat'
 const chatStore = useChatStore()
 
 const WECHAT_GREEN = '#95ec69'
-
-const getPastelColor = (name: string = '') => {
-  const colors = [
-    'bg-red-200 text-red-700',
-    'bg-orange-200 text-orange-700',
-    'bg-amber-200 text-amber-700',
-    'bg-yellow-200 text-yellow-700',
-    'bg-lime-200 text-lime-700',
-    'bg-green-200 text-green-700',
-    'bg-emerald-200 text-emerald-700',
-    'bg-teal-200 text-teal-700',
-    'bg-cyan-200 text-cyan-700',
-    'bg-sky-200 text-sky-700',
-    'bg-blue-200 text-blue-700',
-    'bg-indigo-200 text-indigo-700',
-    'bg-violet-200 text-violet-700',
-    'bg-purple-200 text-purple-700',
-    'bg-fuchsia-200 text-fuchsia-700',
-    'bg-pink-200 text-pink-700',
-    'bg-rose-200 text-rose-700'
-  ]
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return colors[Math.abs(hash) % colors.length]
-}
 </script>
 
 <template>
@@ -47,13 +20,12 @@ const getPastelColor = (name: string = '') => {
       <div v-else :class="['flex gap-2.5 items-start', msg.isMe ? 'flex-row-reverse' : 'flex-row']">
         <!-- Avatar -->
         <div 
-          class="w-10 h-10 rounded-[4px] overflow-hidden flex-shrink-0 shadow-sm border border-black/5 flex items-center justify-center font-bold text-sm"
-          :class="msg.sender?.avatar ? 'bg-gray-300' : getPastelColor(msg.sender?.name)"
+          class="w-10 h-10 rounded-[4px] overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200/50"
         >
           <img v-if="msg.sender?.avatar" :src="msg.sender.avatar" class="w-full h-full object-cover" />
-          <span v-else>
+          <div v-else class="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 font-bold text-sm">
             {{ msg.sender?.name?.charAt(0) || 'U' }}
-          </span>
+          </div>
         </div>
 
         <!-- Content Wrapper -->

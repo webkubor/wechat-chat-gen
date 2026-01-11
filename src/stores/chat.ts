@@ -44,20 +44,37 @@ export const useChatStore = defineStore('chat', {
       this.backgroundImage = url
     },
     getRandomUser() {
-      // Realistic WeChat Nicknames
+      // 真实微信昵称库
       const names = [
         'AAA建材王总', '水晶女孩', 'Jay迷-小凯', '晴天', '一路向北', 
         '简单爱', '范特西', '告白气球', '七里香', '稻香', 
         '夜曲', '以父之名', '搁浅', '东风破', '发如雪',
         '快乐小狗', 'momo', '用户88291', '卡布奇诺', '往事随风',
         '花开富贵', '除了帅一无所有', '只是近黄昏', '小仙女', '大魔王',
-        '我是你的优乐美', '周杰伦的奶茶', '叶惠美', '半岛铁盒', '龙卷风'
+        '我是你的优乐美', '周杰伦的奶茶', '叶惠美', '半岛铁盒', '龙卷风',
+        '淡泊人生', '云淡风轻', '往事如烟', '奋斗中的小李', '逆流而上'
       ]
-      const name = names[Math.floor(Math.random() * names.length)] || 'User'
       
-      // Use Pravatar for real-person avatars (img 1-70 are valid real faces)
-      const avatarId = Math.floor(Math.random() * 70) + 1
-      const avatar = `https://i.pravatar.cc/300?img=${avatarId}`
+      // 精选高质感头像库 (Unsplash IDs)
+      const avatarPool = [
+        // 人像 (Portraits)
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+        // 萌宠/静物 (Pets/Objects)
+        'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=100&h=100&fit=crop',
+        // 风景/花卉 (Scenery/Flowers - 非常符合某些用户习惯)
+        'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=100&h=100&fit=crop'
+      ]
+
+      const name = names[Math.floor(Math.random() * names.length)] || '用户'
+      const avatar = avatarPool[Math.floor(Math.random() * avatarPool.length)] || ''
 
       return {
         name,
@@ -121,7 +138,10 @@ export const useChatStore = defineStore('chat', {
       for (let i = 0; i < count; i++) {
         const isMe = Math.random() > 0.8
         const content = hypes[Math.floor(Math.random() * hypes.length)] || '...'
-        const sender = isMe ? { name: '我', avatar: '' } : this.getRandomUser()
+        
+        // 即使是"我"，也随机分配一个头像，避免空白
+        const randomUser = this.getRandomUser()
+        const sender = isMe ? { name: '我', avatar: randomUser.avatar } : randomUser
         
         this.messages.push({
           id: Math.random().toString(36).substr(2, 9),
