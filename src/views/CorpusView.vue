@@ -96,6 +96,7 @@ const handleImport = async (e: Event) => {
           Corpus<span class="font-bold text-[#7A9D8C]">Manager</span>
         </h1>
         <p class="text-white/40 text-sm tracking-widest mt-1">语料库管理</p>
+        <p class="text-white/30 text-[10px] tracking-widest mt-1">好易美票务公司</p>
       </div>
       <div class="flex items-center gap-3">
         <button

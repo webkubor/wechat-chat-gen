@@ -115,7 +115,7 @@ watch(() => chatStore.messages.length, () => {
         <div class="relative z-20">
           <div class="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-black/10 to-transparent pointer-events-none"></div>
           <div class="bg-[#f4f4f4]/95 backdrop-blur-md border-t border-black/10 px-3 pt-2 pb-[max(14px,env(safe-area-inset-bottom))]">
-            <div class="flex items-end gap-2.5">
+            <div class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-full bg-white border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.12),inset_0_-1px_0_rgba(0,0,0,0.06)] flex items-center justify-center">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-600">
                   <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
@@ -123,12 +123,12 @@ watch(() => chatStore.messages.length, () => {
                   <line x1="12" x2="12" y1="19" y2="22"></line>
                 </svg>
               </div>
-              <div class="flex-1 min-h-[38px] bg-white rounded-[10px] border border-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] mb-0.5"></div>
-              <div class="w-9 h-9 rounded-full bg-white border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.1)] flex items-center justify-center">
+              <div class="flex-1 h-[38px] bg-white rounded-[12px] border border-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)]"></div>
+              <div class="w-9 h-9 flex items-center justify-center">
                 <span class="text-[22px] text-gray-600 leading-none">☺</span>
               </div>
-              <div class="w-9 h-9 rounded-full bg-white border border-black/15 shadow-[0_1px_2px_rgba(0,0,0,0.1)] flex items-center justify-center">
-                <span class="text-[20px] text-gray-700 border border-gray-700/80 rounded-full h-[22px] w-[22px] flex items-center justify-center font-light leading-none pb-0.5">+</span>
+              <div class="w-9 h-9 flex items-center justify-center">
+                <span class="text-[20px] text-gray-700 border border-gray-700/70 rounded-full h-[22px] w-[22px] flex items-center justify-center font-light leading-none pb-0.5">+</span>
               </div>
             </div>
           </div>
