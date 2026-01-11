@@ -18,6 +18,7 @@ watch(() => chatStore.messages.length, () => {
   <div class="flex flex-col items-center p-4">
     <!-- Phone Frame -->
     <div 
+      id="wechat-screen"
       :class="[
         'relative overflow-hidden transition-all duration-300 bg-black',
         chatStore.deviceType === 'ios' 

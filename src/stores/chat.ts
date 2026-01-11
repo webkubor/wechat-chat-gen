@@ -27,9 +27,10 @@ export const useChatStore = defineStore('chat', {
     messages: [] as Message[],
     systemTemplates: [
       '"{name}"邀请"{invited}"加入了群聊',
-      '"{name}"通过扫描二维码加入群聊',
-      '"{name}"修改群名为"{title}"',
-      '你邀请"{name}"加入了群聊'
+      '"{invited}"通过扫描"{name}"分享的二维码加入群聊',
+      '"{name}"邀请"{invited}"加入了群聊，群聊参与人还有：{other}',
+      '"{invited}"通过群链接加入群聊',
+      '你邀请"{invited}"加入了群聊'
     ]
   }),
   actions: {
@@ -54,7 +55,8 @@ export const useChatStore = defineStore('chat', {
         '快乐小狗', 'momo', '用户88291', '卡布奇诺', '往事随风',
         '花开富贵', '除了帅一无所有', '只是近黄昏', '小仙女', '大魔王',
         '我是你的优乐美', '周杰伦的奶茶', '叶惠美', '半岛铁盒', '龙卷风',
-        '淡泊人生', '云淡风轻', '往事如烟', '奋斗中的小李', '逆流而上'
+        '淡泊人生', '云淡风轻', '往事如烟', '奋斗中的小李', '逆流而上',
+        'Cc', 'David', 'Lisa', 'Mike', 'Tom', 'Jerry'
       ]
       
       // 精选高质感头像库 (Unsplash IDs)
@@ -119,11 +121,21 @@ export const useChatStore = defineStore('chat', {
     },
     batchAddJoinMessages(count: number) {
       for (let i = 0; i < count; i++) {
-        const user = this.getRandomUser()
+        const inviter = this.getRandomUser()
+        const invited = this.getRandomUser()
+        const other = this.getRandomUser()
+        
+        const template = this.systemTemplates[Math.floor(Math.random() * this.systemTemplates.length)] || '"{name}"邀请"{invited}"加入了群聊'
+        
+        const content = template
+          .replace('{name}', inviter.name)
+          .replace('{invited}', invited.name)
+          .replace('{other}', other.name)
+
         this.messages.push({
           id: Math.random().toString(36).substr(2, 9),
           type: 'system',
-          content: (this.systemTemplates[0] || '').replace('{name}', '管理员').replace('{invited}', user.name)
+          content
         })
       }
     },
