@@ -111,12 +111,12 @@ export const useCorpusStore = defineStore('corpus', {
           const getAll = store.getAll()
           getAll.onsuccess = () => {
             const allItems = getAll.result as CorpusItem[]
-            const customDialogues: DialogueItem[] = allItems
+            const customDialogues = allItems
               .filter(isDialogue)
-              .map(i => ({ ...i, preset: false }))
-            const customSystems: SystemItem[] = allItems
+              .map<DialogueItem>(i => ({ ...i, preset: false }))
+            const customSystems = allItems
               .filter(isSystem)
-              .map(i => ({ ...i, preset: false }))
+              .map<SystemItem>(i => ({ ...i, preset: false }))
             const presetDialogues: DialogueItem[] = PRESET_DIALOGUES.map((content, index) => ({
               id: -(index + 1),
               type: 'dialogue' as const,
@@ -129,8 +129,8 @@ export const useCorpusStore = defineStore('corpus', {
               content,
               preset: true
             }))
-            this.dialogues = presetDialogues.concat(customDialogues)
-            this.systems = presetSystems.concat(customSystems)
+            this.dialogues = [...presetDialogues, ...customDialogues]
+            this.systems = [...presetSystems, ...customSystems]
             resolve()
           }
         }
