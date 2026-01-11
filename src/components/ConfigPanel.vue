@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useChatStore } from '../stores/chat'
 
 const chatStore = useChatStore()
@@ -9,6 +9,16 @@ const genCount = ref(20)
 onMounted(() => {
   // 初始进入自动生成20条对话，避免空白
   chatStore.batchAddRandomDialog(20)
+})
+
+// 监听模式切换，自动刷新预览内容
+watch(currentMode, (newMode) => {
+  chatStore.clearMessages()
+  if (newMode === 'join') {
+    chatStore.batchAddJoinMessages(20)
+  } else {
+    chatStore.batchAddRandomDialog(20)
+  }
 })
 
 const handleBgUpload = (e: Event) => {
@@ -62,7 +72,7 @@ const handleGenerate = () => {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-3 gap-4">
         <div class="group">
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2 group-focus-within:text-[#7A9D8C] transition-colors">系统样式</label>
           <div class="relative">
@@ -76,9 +86,20 @@ const handleGenerate = () => {
         <div>
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">聊天背景</label>
           <label class="flex items-center justify-center w-full h-[46px] bg-white/5 hover:bg-white/10 border border-white/10 border-dashed rounded-xl cursor-pointer transition-all duration-300 group hover:border-[#7A9D8C]/50">
-            <span class="text-xs text-white/40 group-hover:text-[#7A9D8C] transition-colors">点击上传图片</span>
+            <span class="text-xs text-white/40 group-hover:text-[#7A9D8C] transition-colors">上传图片</span>
             <input type="file" @change="handleBgUpload" accept="image/*" class="hidden" />
           </label>
+        </div>
+        <div>
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">昵称颜色</label>
+          <div class="flex items-center h-[46px] bg-white/5 rounded-xl px-2 gap-2">
+            <input 
+              v-model="chatStore.nicknameColor" 
+              type="color" 
+              class="w-8 h-8 bg-transparent border-none cursor-pointer"
+            />
+            <span class="text-[10px] text-white/60 font-mono">{{ chatStore.nicknameColor }}</span>
+          </div>
         </div>
       </div>
     </div>

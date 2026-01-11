@@ -1,7 +1,17 @@
 <script setup lang="ts">
+import { ref, watch, nextTick } from 'vue'
 import { useChatStore } from '../stores/chat'
 
 const chatStore = useChatStore()
+const scrollContainer = ref<HTMLElement | null>(null)
+
+watch(() => chatStore.messages.length, () => {
+  nextTick(() => {
+    if (scrollContainer.value) {
+      scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
+    }
+  })
+})
 </script>
 
 <template>
@@ -95,7 +105,7 @@ const chatStore = useChatStore()
         </div>
 
         <!-- Chat Content Area -->
-        <div class="flex-1 overflow-y-auto pb-2 scrollbar-hide relative z-0">
+        <div ref="scrollContainer" class="flex-1 overflow-y-auto pb-2 scrollbar-hide relative z-0 scroll-smooth">
           <slot></slot>
         </div>
 

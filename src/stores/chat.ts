@@ -20,8 +20,10 @@ export const useChatStore = defineStore('chat', {
   state: () => ({
     groupTitle: '周杰伦杭州站粉丝交流群',
     memberCount: 188,
+    nicknameColor: '#adadad',
     backgroundImage: defaultBg,
     deviceType: 'ios' as DeviceType,
+    currentUser: { name: '我', avatar: '' }, // Placeholder, init in action or getter if needed, but simple obj here is fine if we init in getRandomUser logic context
     messages: [] as Message[],
     systemTemplates: [
       '"{name}"邀请"{invited}"加入了群聊',
@@ -126,6 +128,12 @@ export const useChatStore = defineStore('chat', {
       }
     },
     batchAddRandomDialog(count: number) {
+      // Ensure 'Me' has a consistent avatar for this session
+      if (!this.currentUser.avatar) {
+        const randomMe = this.getRandomUser()
+        this.currentUser = { name: '我', avatar: randomMe.avatar }
+      }
+
       const hypes = [
         '终于等到这一天了！', '有人出杭州站的票吗？求两张！', '我在黄龙体育中心门口了，人超多！',
         '前排兜售瓜子饮料矿泉水~', '谁有歌单啊？求分享', '激动得睡不着觉',
@@ -139,9 +147,8 @@ export const useChatStore = defineStore('chat', {
         const isMe = Math.random() > 0.8
         const content = hypes[Math.floor(Math.random() * hypes.length)] || '...'
         
-        // 即使是"我"，也随机分配一个头像，避免空白
-        const randomUser = this.getRandomUser()
-        const sender = isMe ? { name: '我', avatar: randomUser.avatar } : randomUser
+        // Use consistent current user for 'Me', random user for others
+        const sender = isMe ? this.currentUser : this.getRandomUser()
         
         this.messages.push({
           id: Math.random().toString(36).substr(2, 9),
