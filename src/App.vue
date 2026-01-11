@@ -2,11 +2,14 @@
 import DeviceFrame from './components/DeviceFrame.vue'
 import ChatView from './components/ChatView.vue'
 import ConfigPanel from './components/ConfigPanel.vue'
+import MusicPlayer from './components/MusicPlayer.vue'
 </script>
 
 <template>
   <div class="min-h-screen w-full font-sans text-slate-200 overflow-x-hidden relative selection:bg-[#7A9D8C] selection:text-white">
     
+    <MusicPlayer />
+
     <!-- Liquid Background -->
     <div class="fixed inset-0 z-0">
       <div class="absolute inset-0 bg-[#2C3639]"></div>
