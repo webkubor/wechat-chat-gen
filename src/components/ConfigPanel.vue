@@ -322,6 +322,20 @@ const handleBatchDownload = async () => {
         </div>
       </div>
 
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">单张内容量</label>
+          <div class="flex justify-between items-end mb-3">
+             <span class="text-xs font-bold text-[#7A9D8C]">{{ genCount }} <span class="text-[10px] font-normal text-white/30">条</span></span>
+          </div>
+          <input 
+            v-model.number="genCount" 
+            type="range" min="5" max="50" 
+            class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#7A9D8C]"
+          />
+        </div>
+      </div>
+
       <!-- New row for System Message Colors -->
       <div class="grid grid-cols-2 gap-4">
         <div class="group">
@@ -356,28 +370,19 @@ const handleBatchDownload = async () => {
 
       <!-- Unified Generation UI -->
       <div class="p-5 bg-white/5 rounded-2xl border border-white/5 space-y-6">
-        <div>
-          <div class="flex justify-between items-end mb-3">
-             <label class="text-[10px] font-medium text-white/40 uppercase tracking-widest">单张内容量</label>
-             <span class="text-xs font-bold text-[#7A9D8C]">{{ genCount }} <span class="text-[10px] font-normal text-white/30">条</span></span>
-          </div>
-          <input 
-            v-model.number="genCount" 
-            type="range" min="5" max="50" 
-            class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#7A9D8C]"
-          />
-        </div>
 
         <div>
-          <div class="flex justify-between items-end mb-3">
-             <label class="text-[10px] font-medium text-white/40 uppercase tracking-widest">一键导出张数</label>
-             <span class="text-xs font-bold text-[#A27B5C]">{{ downloadCount }} <span class="text-[10px] font-normal text-white/30">张</span></span>
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">一键导出张数</label>
+          <div class="flex items-center gap-3">
+            <input
+              v-model.number="downloadCount"
+              type="number"
+              min="1"
+              max="10"
+              class="w-24 bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#A27B5C]/50 rounded-xl px-3 py-3 text-sm text-white text-center focus:outline-none focus:ring-4 focus:ring-[#A27B5C]/10 transition-all duration-300"
+            />
+            <span class="text-xs text-white/40">张</span>
           </div>
-          <input 
-            v-model.number="downloadCount" 
-            type="range" min="1" max="10" 
-            class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#A27B5C]"
-          />
         </div>
 
         <div class="flex flex-col gap-3">
