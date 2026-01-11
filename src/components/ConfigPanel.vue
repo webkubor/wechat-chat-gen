@@ -72,9 +72,13 @@ const downloadImage = async (index: number) => {
     const screenRect = element.getBoundingClientRect()
     const headerRect = header.getBoundingClientRect()
     const inputRect = inputBar.getBoundingClientRect()
-    const cropTop = Math.max(0, headerRect.top - screenRect.top)
-    const cropBottom = Math.max(0, inputRect.top - screenRect.top)
+    const scaleX = screenRect.width / element.offsetWidth
+    const scaleY = screenRect.height / element.offsetHeight
+    const cropTop = Math.max(0, (headerRect.top - screenRect.top) / (scaleY || 1))
+    const cropBottom = Math.max(0, (inputRect.top - screenRect.top) / (scaleY || 1))
     const cropHeight = Math.max(0, cropBottom - cropTop)
+    const cropWidth = element.offsetWidth
+    const exportHeight = cropHeight > 0 ? cropHeight : element.offsetHeight
 
     const canvas = await html2canvas(element, {
       useCORS: true,
@@ -84,8 +88,8 @@ const downloadImage = async (index: number) => {
       allowTaint: true,
       x: 0,
       y: cropTop,
-      width: screenRect.width,
-      height: cropHeight
+      width: cropWidth,
+      height: exportHeight
     })
 
     const link = document.createElement('a')
@@ -123,7 +127,7 @@ const handleBatchDownload = async () => {
 <template>
   <div class="space-y-8">
     
-    <!-- Section: Identity -->
+    <!-- Section: Basics -->
     <div class="space-y-5">
       <div class="flex items-center gap-2 mb-2">
          <div class="w-1 h-4 bg-[#7A9D8C] rounded-full"></div>
@@ -150,6 +154,56 @@ const handleBatchDownload = async () => {
           </div>
         </div>
       </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="group">
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">对话模式</label>
+          <div class="bg-black/20 p-1.5 rounded-2xl flex relative overflow-hidden backdrop-blur-sm">
+            <button 
+              @click="currentMode = 'chat'"
+              class="flex-1 py-2.5 rounded-xl text-xs font-medium transition-all duration-500 relative z-10"
+              :class="currentMode === 'chat' ? 'text-white shadow-lg' : 'text-white/40 hover:text-white/60'"
+            >
+              对话模式
+            </button>
+            <button 
+              @click="currentMode = 'join'"
+              class="flex-1 py-2.5 rounded-xl text-xs font-medium transition-all duration-500 relative z-10"
+              :class="currentMode === 'join' ? 'text-white shadow-lg' : 'text-white/40 hover:text-white/60'"
+            >
+              拉人模式
+            </button>
+            
+            <!-- Animated Background Pill -->
+            <div 
+              class="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#7A9D8C] rounded-xl transition-all duration-500 ease-spring"
+              :class="currentMode === 'chat' ? 'left-1.5' : 'left-[calc(50%+3px)]'"
+            ></div>
+          </div>
+        </div>
+        <div class="group">
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">预览主题</label>
+          <div class="relative">
+            <select v-model="chatStore.previewTheme" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white focus:outline-none transition-all cursor-pointer">
+              <option value="light" class="text-gray-900">浅色</option>
+              <option value="dark" class="text-gray-900">深色</option>
+            </select>
+            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section: Advanced (Collapsed) -->
+    <details class="group space-y-5">
+      <summary class="flex items-center justify-between gap-3 cursor-pointer list-none">
+        <div class="flex items-center gap-2">
+           <div class="w-1 h-4 bg-[#A27B5C] rounded-full"></div>
+           <h3 class="text-sm font-medium text-white/80 tracking-wide">高级设置</h3>
+        </div>
+        <span class="text-xs text-white/40 group-open:rotate-180 transition-transform">▼</span>
+      </summary>
 
       <div class="grid grid-cols-3 gap-4">
         <div class="group">
@@ -243,19 +297,6 @@ const handleBatchDownload = async () => {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div class="group">
-          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">预览主题</label>
-          <div class="relative">
-            <select v-model="chatStore.previewTheme" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white focus:outline-none transition-all cursor-pointer">
-              <option value="light" class="text-gray-900">浅色</option>
-              <option value="dark" class="text-gray-900">深色</option>
-            </select>
-            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
-          </div>
-        </div>
-      </div>
-
       <!-- New row for System Message Colors -->
       <div class="grid grid-cols-2 gap-4">
         <div class="group">
@@ -279,37 +320,13 @@ const handleBatchDownload = async () => {
           </div>
         </div>
       </div>
-    </div>
+    </details>
 
-    <!-- Section: Generator -->
+    <!-- Section: Export -->
     <div class="space-y-5 pt-4 border-t border-white/5">
       <div class="flex items-center gap-2 mb-2">
          <div class="w-1 h-4 bg-[#A27B5C] rounded-full"></div>
-         <h3 class="text-sm font-medium text-white/80 tracking-wide">生成与导出</h3>
-      </div>
-
-      <!-- Mode Switcher (Glass Pill) -->
-      <div class="bg-black/20 p-1.5 rounded-2xl flex relative overflow-hidden backdrop-blur-sm">
-        <button 
-          @click="currentMode = 'chat'"
-          class="flex-1 py-2.5 rounded-xl text-xs font-medium transition-all duration-500 relative z-10"
-          :class="currentMode === 'chat' ? 'text-white shadow-lg' : 'text-white/40 hover:text-white/60'"
-        >
-          对话模式
-        </button>
-        <button 
-          @click="currentMode = 'join'"
-          class="flex-1 py-2.5 rounded-xl text-xs font-medium transition-all duration-500 relative z-10"
-          :class="currentMode === 'join' ? 'text-white shadow-lg' : 'text-white/40 hover:text-white/60'"
-        >
-          拉人模式
-        </button>
-        
-        <!-- Animated Background Pill -->
-        <div 
-          class="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#7A9D8C] rounded-xl transition-all duration-500 ease-spring"
-          :class="currentMode === 'chat' ? 'left-1.5' : 'left-[calc(50%+3px)]'"
-        ></div>
+         <h3 class="text-sm font-medium text-white/80 tracking-wide">导出设置</h3>
       </div>
 
       <!-- Unified Generation UI -->
