@@ -64,11 +64,56 @@ const handleGenerate = () => {
   }
 }
 
+const triggerDownload = (name: string, blob: Blob) => {
+  const link = document.createElement('a')
+  link.download = name
+  link.href = URL.createObjectURL(blob)
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(link.href)
+}
+
+const handleQuickDownload = async () => {
+  const element = document.getElementById('wechat-screen')
+  if (!element) {
+    alert('未找到预览区域，无法导出')
+    return
+  }
+
+  try {
+    const canvas = await html2canvas(element, {
+      useCORS: true,
+      scale: 2,
+      backgroundColor: '#ededed',
+      logging: false,
+      allowTaint: true
+    })
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/png')
+    })
+    if (!blob) {
+      alert('导出失败：无法生成图片')
+      return
+    }
+
+    triggerDownload(`wechat-preview-${Date.now()}.png`, blob)
+  } catch (err) {
+    console.error('Export failed:', err)
+    alert('导出失败，请重试')
+  }
+}
+
 const renderImageBlob = async (index: number) => {
   const element = document.getElementById('wechat-screen')
   const header = document.getElementById('wechat-titlebar')
   const inputBar = document.getElementById('wechat-input-bar')
-  if (!element || !header || !inputBar) return
+  if (!element || !header || !inputBar) {
+    alert('导出失败：找不到截图区域')
+    return
+  }
 
   try {
     const cropTop = Math.max(0, header.offsetTop)
@@ -94,12 +139,8 @@ const renderImageBlob = async (index: number) => {
     })
 
     if (!blob) {
-      const dataUrl = canvas.toDataURL('image/png')
-      const response = await fetch(dataUrl)
-      return {
-        name: `wechat-gen-${Date.now()}-${index + 1}.png`,
-        blob: await response.blob()
-      }
+      alert('导出失败：无法生成图片')
+      return
     }
 
     return {
@@ -108,6 +149,7 @@ const renderImageBlob = async (index: number) => {
     }
   } catch (err) {
     console.error('Export failed:', err)
+    alert('导出失败，请重试')
   }
 }
 
@@ -136,11 +178,7 @@ const handleBatchDownload = async () => {
     }
 
     const zipBlob = await zip.generateAsync({ type: 'blob' })
-    const link = document.createElement('a')
-    link.download = `wechat-gen-${Date.now()}.zip`
-    link.href = URL.createObjectURL(zipBlob)
-    link.click()
-    URL.revokeObjectURL(link.href)
+    triggerDownload(`wechat-gen-${Date.now()}.zip`, zipBlob)
   } finally {
     isDownloading.value = false
     exportIndex.value = 0
@@ -390,7 +428,13 @@ const handleBatchDownload = async () => {
               @click="handleGenerate" 
               class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]"
             >
-              仅刷新预览
+              刷新
+            </button>
+            <button 
+              @click="handleQuickDownload" 
+              class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]"
+            >
+              下载当前 PNG
             </button>
             <button 
               @click="chatStore.isHighlightingCapture = !chatStore.isHighlightingCapture" 
