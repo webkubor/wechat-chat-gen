@@ -22,7 +22,8 @@ const handleAdd = async () => {
   newContent.value = ''
 }
 
-const handleDelete = async (id: number) => {
+const handleDelete = async (id: number, preset?: boolean) => {
+  if (preset) return
   if (confirm('确定要删除这条语料吗？')) {
     await corpusStore.deleteEntry(id)
   }
@@ -169,9 +170,18 @@ const handleImport = async (e: Event) => {
           :key="item.id"
           class="group flex items-center justify-between p-4 bg-white/5 rounded-xl border border-transparent hover:border-white/10 transition-all"
         >
-          <p class="text-sm text-white/80 font-light tracking-wide select-all">{{ item.content }}</p>
+          <div class="flex items-center gap-3 min-w-0">
+            <span 
+              class="px-2 py-0.5 text-[10px] rounded-full border uppercase tracking-widest"
+              :class="item.preset ? 'border-[#7A9D8C]/50 text-[#7A9D8C]' : 'border-white/20 text-white/40'"
+            >
+              {{ item.preset ? '预设' : '自定义' }}
+            </span>
+            <p class="text-sm text-white/80 font-light tracking-wide select-all truncate">{{ item.content }}</p>
+          </div>
           <button 
-            @click="handleDelete(item.id)"
+            v-if="!item.preset"
+            @click="handleDelete(item.id, item.preset)"
             class="text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-2"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>

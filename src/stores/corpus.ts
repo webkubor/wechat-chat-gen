@@ -4,11 +4,35 @@ export interface CorpusItem {
   id: number
   type: 'dialogue' | 'system'
   content: string
+  preset?: boolean
 }
 
 const DB_NAME = 'wechat_gen_db'
 const DB_VERSION = 1
 const STORE_NAME = 'corpus'
+const DEPRECATED_DIALOGUES = new Set([
+  '终于等到这一天了！', '有人出杭州站的票吗？求两张！', '我在黄龙体育中心门口了，人超多！',
+  '前排兜售瓜子饮料矿泉水~', '谁有歌单啊？求分享', '激动得睡不着觉',
+  '今晚会有《稻香》吗？', '必须有啊！全场大合唱预定', '为了看杰伦特意请了假',
+  '听说今晚有神秘嘉宾？', '真的假的？是谁啊？', '大家要注意防诈骗哦',
+  '周董YYDS！', '已经在检票口排队了', '天气不错，适合听演唱会',
+  '有没有组队入场的？', '刚才在门口看到保姆车了！', '心跳已经120了'
+])
+const PRESET_DIALOGUES = [
+  '终于等到这一天了！', '有人出本场的票吗？求两张！', '我在场馆门口了，人超多！',
+  '前排兜售瓜子饮料矿泉水~', '谁有歌单啊？求分享', '激动得睡不着觉',
+  '今晚会有新歌吗？', '必须有啊！全场大合唱预定', '为了看演出特意请了假',
+  '听说今晚有神秘嘉宾？', '真的假的？是谁啊？', '大家要注意防诈骗哦',
+  '舞台效果太顶了！', '已经在检票口排队了', '天气不错，适合听演唱会',
+  '有没有组队入场的？', '刚才在门口看到保姆车了！', '心跳已经120了'
+]
+const PRESET_SYSTEMS = [
+  '{name}邀请{invited}加入了群聊',
+  '{invited}通过扫描{name}分享的二维码加入群聊',
+  '{invited}通过群成员{name}分享的二维码加入群聊',
+  '{name}邀请{invited}、{other}加入了群聊',
+  '{invited}加入了群聊'
+]
 
 export const useCorpusStore = defineStore('corpus', {
   state: () => ({
@@ -64,6 +88,7 @@ export const useCorpusStore = defineStore('corpus', {
         request.onsuccess = async () => {
           this.isReady = true
           await this.loadAll()
+          await this.purgeDeprecated()
           resolve()
         }
       })
@@ -80,10 +105,42 @@ export const useCorpusStore = defineStore('corpus', {
           const getAll = store.getAll()
           getAll.onsuccess = () => {
             const allItems = getAll.result as CorpusItem[]
-            this.dialogues = allItems.filter(i => i.type === 'dialogue')
-            this.systems = allItems.filter(i => i.type === 'system')
+            const customDialogues = allItems.filter(i => i.type === 'dialogue').map(i => ({ ...i, preset: false }))
+            const customSystems = allItems.filter(i => i.type === 'system').map(i => ({ ...i, preset: false }))
+            const presetDialogues = PRESET_DIALOGUES.map((content, index) => ({
+              id: -(index + 1),
+              type: 'dialogue' as const,
+              content,
+              preset: true
+            }))
+            const presetSystems = PRESET_SYSTEMS.map((content, index) => ({
+              id: -(index + 1),
+              type: 'system' as const,
+              content,
+              preset: true
+            }))
+            this.dialogues = presetDialogues.concat(customDialogues)
+            this.systems = presetSystems.concat(customSystems)
             resolve()
           }
+        }
+      })
+    },
+    async purgeDeprecated() {
+      const db = await this.openDB()
+      return new Promise<void>((resolve) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite')
+        const store = tx.objectStore(STORE_NAME)
+        const getAll = store.getAll()
+        getAll.onsuccess = () => {
+          const allItems = getAll.result as CorpusItem[]
+          allItems
+            .filter(item => item.type === 'dialogue' && DEPRECATED_DIALOGUES.has(item.content))
+            .forEach(item => store.delete(item.id))
+        }
+        tx.oncomplete = async () => {
+          await this.loadAll()
+          resolve()
         }
       })
     },
@@ -92,7 +149,15 @@ export const useCorpusStore = defineStore('corpus', {
       return new Promise<void>((resolve) => {
         const tx = db.transaction(STORE_NAME, 'readwrite')
         const store = tx.objectStore(STORE_NAME)
-        store.clear()
+        const getAll = store.getAll()
+        getAll.onsuccess = () => {
+          const allItems = getAll.result as CorpusItem[]
+          allItems.forEach(item => {
+            if (!item.preset) {
+              store.delete(item.id)
+            }
+          })
+        }
         tx.oncomplete = async () => {
           await this.loadAll()
           resolve()
@@ -142,7 +207,7 @@ export const useCorpusStore = defineStore('corpus', {
           const tx = db.transaction(STORE_NAME, 'readwrite')
           const store = tx.objectStore(STORE_NAME)
           
-          store.add({ type, content })
+          store.add({ type, content, preset: false })
           
           tx.oncomplete = async () => {
             await this.loadAll()
@@ -153,6 +218,7 @@ export const useCorpusStore = defineStore('corpus', {
     },
 
     async deleteEntry(id: number) {
+      if (id < 0) return
       return new Promise<void>((resolve) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION)
         request.onsuccess = (event) => {
