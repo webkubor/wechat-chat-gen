@@ -18,8 +18,6 @@ export interface Message {
 
 export const useChatStore = defineStore('chat', {
   state: () => ({
-    starName: '周杰伦',
-    location: '杭州',
     groupTitle: '周杰伦杭州站粉丝交流群',
     memberCount: 188,
     backgroundImage: defaultBg,
@@ -33,9 +31,6 @@ export const useChatStore = defineStore('chat', {
     ]
   }),
   actions: {
-    updateGroupTitle() {
-      this.groupTitle = `${this.starName}${this.location}站粉丝交流群`
-    },
     addMessage(msg: Message) {
       this.messages.push(msg)
     },
