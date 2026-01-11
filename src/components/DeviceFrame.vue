@@ -21,6 +21,7 @@ watch(() => chatStore.messages.length, () => {
       id="wechat-screen"
       :class="[
         'relative overflow-hidden transition-all duration-300 bg-black',
+        chatStore.isHighlightingCapture ? 'ring-4 ring-red-500 ring-offset-4 ring-offset-black animate-pulse' : '',
         chatStore.deviceType === 'ios' 
           ? 'w-[375px] h-[812px] rounded-[50px] shadow-[0_0_0_12px_#111,0_0_0_14px_#333,0_20px_50px_-10px_rgba(0,0,0,0.5)]' 
           : 'w-[360px] h-[780px] rounded-[30px] shadow-[0_0_0_8px_#111,0_0_0_9px_#333,0_20px_50px_-10px_rgba(0,0,0,0.5)]'

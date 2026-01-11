@@ -36,8 +36,12 @@ const WECHAT_GREEN = '#95ec69'
           <!-- Name for group chat (only others) -->
           <div 
             v-if="!msg.isMe" 
-            class="text-[11px] mb-0.5 ml-0.5 scale-90 origin-bottom-left"
-            :style="{ color: chatStore.nicknameColor }"
+            class="mb-0.5 ml-0.5 scale-90 origin-bottom-left"
+            :style="{ 
+              color: chatStore.nicknameColor,
+              fontSize: chatStore.nicknameSize + 'px',
+              fontFamily: chatStore.nicknameFont
+            }"
           >
             {{ msg.sender?.name }}
           </div>
@@ -68,3 +72,12 @@ const WECHAT_GREEN = '#95ec69'
     </div>
   </div>
 </template>
+
+<style scoped>
+:deep(.system-name) {
+  color: v-bind('chatStore.systemNameColor');
+  font-size: v-bind('chatStore.nicknameSize + "px"');
+  font-family: v-bind('chatStore.nicknameFont');
+  font-weight: 500;
+}
+</style>

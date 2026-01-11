@@ -151,6 +151,34 @@ const handleBatchDownload = async () => {
         </div>
       </div>
 
+      <!-- New row for Nickname styles -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="group">
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">昵称大小</label>
+          <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2">
+            <input 
+              v-model.number="chatStore.nicknameSize" 
+              type="range" min="8" max="20" 
+              class="flex-1 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#7A9D8C]"
+            />
+            <span class="text-xs text-white/60 font-mono w-6">{{ chatStore.nicknameSize }}</span>
+          </div>
+        </div>
+        <div class="group">
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">昵称字体</label>
+          <div class="relative">
+            <select v-model="chatStore.nicknameFont" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white focus:outline-none transition-all cursor-pointer">
+              <option value="sans-serif" class="text-gray-900">默认无衬线</option>
+              <option value="'PingFang SC', sans-serif" class="text-gray-900">苹方 (Mac/iOS)</option>
+              <option value="'Microsoft YaHei', sans-serif" class="text-gray-900">微软雅黑 (Win)</option>
+              <option value="serif" class="text-gray-900">衬线体 (优雅)</option>
+              <option value="monospace" class="text-gray-900">等宽体 (极客)</option>
+            </select>
+            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
+          </div>
+        </div>
+      </div>
+
       <!-- New row for System Message Colors -->
       <div class="grid grid-cols-2 gap-4">
         <div class="group">
@@ -234,12 +262,22 @@ const handleBatchDownload = async () => {
         </div>
 
         <div class="flex flex-col gap-3">
-          <button 
-            @click="handleGenerate" 
-            class="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]"
-          >
-            仅刷新预览
-          </button>
+          <div class="flex gap-3">
+            <button 
+              @click="handleGenerate" 
+              class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]"
+            >
+              仅刷新预览
+            </button>
+            <button 
+              @click="chatStore.isHighlightingCapture = !chatStore.isHighlightingCapture" 
+              class="flex-1 py-3.5 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              :class="chatStore.isHighlightingCapture ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-white/5 hover:bg-white/10 text-white/80'"
+            >
+              <span v-if="chatStore.isHighlightingCapture">🔆 停止闪烁</span>
+              <span v-else>👁️ 预览截图区</span>
+            </button>
+          </div>
           
           <button 
             @click="handleBatchDownload" 
