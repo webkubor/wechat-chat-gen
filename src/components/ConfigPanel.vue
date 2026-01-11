@@ -27,6 +27,10 @@ watch(currentMode, (newMode) => {
   }
 })
 
+watch(() => chatStore.previewTheme, (theme) => {
+  chatStore.statusBarTheme = theme === 'dark' ? 'light' : 'dark'
+})
+
 const handleBgUpload = (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (file) {

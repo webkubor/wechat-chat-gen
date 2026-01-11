@@ -1,9 +1,42 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useChatStore } from '../stores/chat'
 
 const chatStore = useChatStore()
 
 const WECHAT_GREEN = '#95ec69'
+const isDark = computed(() => chatStore.previewTheme === 'dark')
+
+const getBubbleStyle = (isMe?: boolean) => {
+  if (isDark.value) {
+    return {
+      backgroundColor: isMe ? '#2f7a4a' : '#2a2a2e',
+      color: '#f1f1f1'
+    }
+  }
+
+  return {
+    backgroundColor: isMe ? WECHAT_GREEN : '#ffffff',
+    color: '#191919'
+  }
+}
+
+const getArrowStyle = (isMe?: boolean) => {
+  const backgroundColor = getBubbleStyle(isMe).backgroundColor
+  return isMe
+    ? {
+        borderLeftColor: backgroundColor,
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+        borderRightColor: 'transparent'
+      }
+    : {
+        borderRightColor: backgroundColor,
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+        borderLeftColor: 'transparent'
+      }
+}
 </script>
 
 <template>
@@ -12,7 +45,8 @@ const WECHAT_GREEN = '#95ec69'
       <!-- System Message -->
       <div v-if="msg.type === 'system'" class="flex justify-center my-1">
         <div 
-          class="text-white/90 text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block"
+          class="text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block"
+          :class="isDark ? 'text-white/85' : 'text-[#4b4b4b]'"
           :style="{ backgroundColor: chatStore.systemBgColor }"
           v-html="msg.content"
         >
@@ -51,10 +85,9 @@ const WECHAT_GREEN = '#95ec69'
           <!-- Bubble -->
           <div 
             :class="[
-              'relative px-[11px] py-[9px] text-[15px] leading-[22px] rounded-[6px] max-w-[240px] break-words shadow-[0_1px_1px_rgba(0,0,0,0.05)] text-[#191919] outline-none',
-              msg.isMe ? `bg-[${WECHAT_GREEN}]` : 'bg-white'
+              'relative px-[11px] py-[9px] text-[15px] leading-[22px] rounded-[6px] max-w-[240px] break-words shadow-[0_1px_1px_rgba(0,0,0,0.05)] outline-none'
             ]"
-            :style="msg.isMe ? `background-color: ${WECHAT_GREEN}` : ''"
+            :style="getBubbleStyle(msg.isMe)"
             contenteditable
             @blur="(e) => chatStore.updateMessage(msg.id, 'content', (e.target as HTMLElement).innerText)"
           >
@@ -64,11 +97,9 @@ const WECHAT_GREEN = '#95ec69'
             <div 
               :class="[
                 'absolute top-[13px] w-0 h-0 border-[6px]',
-                msg.isMe 
-                  ? 'right-[-5px] border-l-[#95ec69] border-t-transparent border-b-transparent border-r-transparent' 
-                  : 'left-[-5px] border-r-white border-t-transparent border-b-transparent border-l-transparent'
+                msg.isMe ? 'right-[-5px]' : 'left-[-5px]'
               ]"
-              :style="msg.isMe ? `border-left-color: ${WECHAT_GREEN}` : ''"
+              :style="getArrowStyle(msg.isMe)"
             ></div>
           </div>
         </div>

@@ -7,6 +7,12 @@ export interface CorpusItem {
   preset?: boolean
 }
 
+type DialogueItem = CorpusItem & { type: 'dialogue' }
+type SystemItem = CorpusItem & { type: 'system' }
+
+const isDialogue = (item: CorpusItem): item is DialogueItem => item.type === 'dialogue'
+const isSystem = (item: CorpusItem): item is SystemItem => item.type === 'system'
+
 const DB_NAME = 'wechat_gen_db'
 const DB_VERSION = 1
 const STORE_NAME = 'corpus'
@@ -105,15 +111,15 @@ export const useCorpusStore = defineStore('corpus', {
           const getAll = store.getAll()
           getAll.onsuccess = () => {
             const allItems = getAll.result as CorpusItem[]
-            const customDialogues = allItems.filter(i => i.type === 'dialogue').map(i => ({ ...i, preset: false }))
-            const customSystems = allItems.filter(i => i.type === 'system').map(i => ({ ...i, preset: false }))
-            const presetDialogues = PRESET_DIALOGUES.map((content, index) => ({
+            const customDialogues = allItems.filter(isDialogue).map(i => ({ ...i, preset: false }))
+            const customSystems = allItems.filter(isSystem).map(i => ({ ...i, preset: false }))
+            const presetDialogues: DialogueItem[] = PRESET_DIALOGUES.map((content, index) => ({
               id: -(index + 1),
               type: 'dialogue' as const,
               content,
               preset: true
             }))
-            const presetSystems = PRESET_SYSTEMS.map((content, index) => ({
+            const presetSystems: SystemItem[] = PRESET_SYSTEMS.map((content, index) => ({
               id: -(index + 1),
               type: 'system' as const,
               content,
