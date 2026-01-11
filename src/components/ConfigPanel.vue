@@ -3,6 +3,7 @@ import { ref, onMounted, watch, nextTick } from 'vue'
 import { useChatStore } from '../stores/chat'
 import { useCorpusStore } from '../stores/corpus'
 import html2canvas from 'html2canvas'
+import JSZip from 'jszip'
 
 const chatStore = useChatStore()
 const corpusStore = useCorpusStore()
@@ -62,7 +63,7 @@ const handleGenerate = () => {
   }
 }
 
-const downloadImage = async (index: number) => {
+const renderImageBlob = async (index: number) => {
   const element = document.getElementById('wechat-screen')
   const header = document.getElementById('wechat-titlebar')
   const inputBar = document.getElementById('wechat-input-bar')
@@ -92,10 +93,23 @@ const downloadImage = async (index: number) => {
       height: exportHeight
     })
 
-    const link = document.createElement('a')
-    link.download = `wechat-gen-${Date.now()}-${index + 1}.png`
-    link.href = canvas.toDataURL('image/png')
-    link.click()
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/png')
+    })
+
+    if (!blob) {
+      const dataUrl = canvas.toDataURL('image/png')
+      const response = await fetch(dataUrl)
+      return {
+        name: `wechat-gen-${Date.now()}-${index + 1}.png`,
+        blob: await response.blob()
+      }
+    }
+
+    return {
+      name: `wechat-gen-${Date.now()}-${index + 1}.png`,
+      blob
+    }
   } catch (err) {
     console.error('Export failed:', err)
   }
@@ -106,6 +120,7 @@ const handleBatchDownload = async () => {
   isDownloading.value = true
   
   try {
+    const zip = new JSZip()
     for (let i = 0; i < downloadCount.value; i++) {
       // 1. 生成新内容
       handleGenerate()
@@ -116,8 +131,18 @@ const handleBatchDownload = async () => {
       await new Promise(resolve => setTimeout(resolve, 1500)) 
       
       // 3. 截图下载
-      await downloadImage(i)
+      const image = await renderImageBlob(i)
+      if (image?.blob) {
+        zip.file(image.name, image.blob)
+      }
     }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' })
+    const link = document.createElement('a')
+    link.download = `wechat-gen-${Date.now()}.zip`
+    link.href = URL.createObjectURL(zipBlob)
+    link.click()
+    URL.revokeObjectURL(link.href)
   } finally {
     isDownloading.value = false
   }
