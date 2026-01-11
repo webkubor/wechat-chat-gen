@@ -21,6 +21,8 @@ export const useChatStore = defineStore('chat', {
     groupTitle: '周杰伦杭州站粉丝交流群',
     memberCount: 188,
     nicknameColor: '#adadad',
+    systemBgColor: 'rgba(255, 255, 255, 0.15)',
+    systemNameColor: '#7d90a9',
     backgroundImage: defaultBg,
     deviceType: 'ios' as DeviceType,
     currentUser: { name: '我', avatar: '' }, // Placeholder, init in action or getter if needed, but simple obj here is fine if we init in getRandomUser logic context
@@ -128,9 +130,9 @@ export const useChatStore = defineStore('chat', {
         const template = this.systemTemplates[Math.floor(Math.random() * this.systemTemplates.length)] || '"{name}"邀请"{invited}"加入了群聊'
         
         const content = template
-          .replace('{name}', `<span style="color: #7d90a9">${inviter.name}</span>`)
-          .replace('{invited}', `<span style="color: #7d90a9">${invited.name}</span>`)
-          .replace('{other}', `<span style="color: #7d90a9">${other.name}</span>`)
+          .replace('{name}', `<span style="color: ${this.systemNameColor}">${inviter.name}</span>`)
+          .replace('{invited}', `<span style="color: ${this.systemNameColor}">${invited.name}</span>`)
+          .replace('{other}', `<span style="color: ${this.systemNameColor}">${other.name}</span>`)
 
         this.messages.push({
           id: Math.random().toString(36).substr(2, 9),

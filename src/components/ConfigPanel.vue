@@ -150,6 +150,30 @@ const handleBatchDownload = async () => {
           </div>
         </div>
       </div>
+
+      <!-- New row for System Message Colors -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="group">
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">提示背景 (RGBA)</label>
+          <input 
+            v-model="chatStore.systemBgColor" 
+            type="text" 
+            placeholder="rgba(255,255,255,0.15)"
+            class="w-full bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white font-mono focus:outline-none transition-all"
+          />
+        </div>
+        <div>
+          <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">提示内昵称</label>
+          <div class="flex items-center h-[46px] bg-white/5 rounded-xl px-2 gap-2">
+            <input 
+              v-model="chatStore.systemNameColor" 
+              type="color" 
+              class="w-8 h-8 bg-transparent border-none cursor-pointer"
+            />
+            <span class="text-[10px] text-white/60 font-mono text-xs">{{ chatStore.systemNameColor }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Section: Generator -->

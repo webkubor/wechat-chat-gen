@@ -12,7 +12,8 @@ const WECHAT_GREEN = '#95ec69'
       <!-- System Message -->
       <div v-if="msg.type === 'system'" class="flex justify-center my-1">
         <div 
-          class="bg-white/15 text-white/90 text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block"
+          class="text-white/90 text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block"
+          :style="{ backgroundColor: chatStore.systemBgColor }"
           v-html="msg.content"
         >
         </div>
