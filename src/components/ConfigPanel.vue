@@ -63,16 +63,29 @@ const handleGenerate = () => {
 }
 
 const downloadImage = async (index: number) => {
-  const element = document.getElementById('wechat-capture')
-  if (!element) return
+  const element = document.getElementById('wechat-screen')
+  const header = document.getElementById('wechat-titlebar')
+  const inputBar = document.getElementById('wechat-input-bar')
+  if (!element || !header || !inputBar) return
 
   try {
+    const screenRect = element.getBoundingClientRect()
+    const headerRect = header.getBoundingClientRect()
+    const inputRect = inputBar.getBoundingClientRect()
+    const cropTop = Math.max(0, headerRect.top - screenRect.top)
+    const cropBottom = Math.max(0, inputRect.top - screenRect.top)
+    const cropHeight = Math.max(0, cropBottom - cropTop)
+
     const canvas = await html2canvas(element, {
       useCORS: true,
       scale: 2, // 高清导出
       backgroundColor: '#ededed',
       logging: false,
-      allowTaint: true
+      allowTaint: true,
+      x: 0,
+      y: cropTop,
+      width: screenRect.width,
+      height: cropHeight
     })
 
     const link = document.createElement('a')

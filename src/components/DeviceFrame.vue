@@ -46,11 +46,12 @@ watch(() => chatStore.messages.length, () => {
           class="w-full h-full relative flex flex-col"
           :style="backgroundStyle"
         >
-        <!-- Status Bar -->
+        <!-- Top Navigation Area (Status Bar + WeChat Header) -->
         <div
-          class="relative z-30"
-          :class="isDark ? 'bg-[#151517]' : 'bg-[#ededed]'"
+          class="relative z-30 border-b flex flex-col"
+          :class="isDark ? 'bg-[#151517] border-white/5' : 'bg-[#ededed] border-black/5'"
         >
+          
           <!-- iOS Status Bar -->
           <div v-if="chatStore.deviceType === 'ios'" class="w-full relative">
             <!-- Notch -->
@@ -99,17 +100,13 @@ watch(() => chatStore.messages.length, () => {
               <span>85%</span>
             </div>
           </div>
-        </div>
 
-        <div
-          id="wechat-capture"
-          class="flex flex-1 flex-col"
-        >
           <!-- WeChat Header Content -->
           <div
-            class="relative z-30 border-b flex items-center justify-between"
+            id="wechat-titlebar"
             :class="[
-              isDark ? 'bg-[#151517] border-white/5 text-white' : 'bg-[#ededed] border-black/5 text-[#181818]',
+              'flex items-center justify-between',
+              isDark ? 'text-white' : 'text-[#181818]',
               chatStore.deviceType === 'ios' ? 'pb-2.5 px-2' : 'h-12 px-4'
             ]"
           >
@@ -131,15 +128,15 @@ watch(() => chatStore.messages.length, () => {
                </svg>
             </div>
           </div>
+        </div>
 
-          <!-- Chat Content Area -->
-          <div ref="scrollContainer" class="flex-1 overflow-y-auto pb-2 scrollbar-hide relative z-0 scroll-smooth">
-            <slot></slot>
-          </div>
+        <!-- Chat Content Area -->
+        <div ref="scrollContainer" class="flex-1 overflow-y-auto pb-2 scrollbar-hide relative z-0 scroll-smooth">
+          <slot></slot>
         </div>
 
         <!-- Bottom Input Bar (Simulated) -->
-        <div class="relative z-20">
+        <div id="wechat-input-bar" class="relative z-20">
           <div class="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-black/10 to-transparent pointer-events-none"></div>
         <div
           class="backdrop-blur-md border-t px-3 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]"
