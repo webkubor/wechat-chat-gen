@@ -11,6 +11,7 @@ const currentMode = ref<'chat' | 'join'>('chat')
 const genCount = ref(20)
 const downloadCount = ref(3)
 const isDownloading = ref(false)
+const exportIndex = ref(0)
 
 onMounted(async () => {
   await corpusStore.initDB()
@@ -70,13 +71,8 @@ const renderImageBlob = async (index: number) => {
   if (!element || !header || !inputBar) return
 
   try {
-    const screenRect = element.getBoundingClientRect()
-    const headerRect = header.getBoundingClientRect()
-    const inputRect = inputBar.getBoundingClientRect()
-    const scaleX = screenRect.width / element.offsetWidth
-    const scaleY = screenRect.height / element.offsetHeight
-    const cropTop = Math.max(0, (headerRect.top - screenRect.top) / (scaleY || 1))
-    const cropBottom = Math.max(0, (inputRect.top - screenRect.top) / (scaleY || 1))
+    const cropTop = Math.max(0, header.offsetTop)
+    const cropBottom = Math.max(0, inputBar.offsetTop)
     const cropHeight = Math.max(0, cropBottom - cropTop)
     const cropWidth = element.offsetWidth
     const exportHeight = cropHeight > 0 ? cropHeight : element.offsetHeight
@@ -120,8 +116,10 @@ const handleBatchDownload = async () => {
   isDownloading.value = true
   
   try {
+    exportIndex.value = 0
     const zip = new JSZip()
     for (let i = 0; i < downloadCount.value; i++) {
+      exportIndex.value = i + 1
       // 1. 生成新内容
       handleGenerate()
       
@@ -145,6 +143,7 @@ const handleBatchDownload = async () => {
     URL.revokeObjectURL(link.href)
   } finally {
     isDownloading.value = false
+    exportIndex.value = 0
   }
 }
 </script>
@@ -403,21 +402,24 @@ const handleBatchDownload = async () => {
             </button>
           </div>
           
-          <button 
-            @click="handleBatchDownload" 
-            :disabled="isDownloading"
-            class="w-full py-4 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
-          >
-            <span v-if="!isDownloading">🚀 一键批量下载成品图</span>
-            <span v-else class="flex items-center gap-2">
-              <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              正在导出中...
-            </span>
-          </button>
-        </div>
+            <button 
+              @click="handleBatchDownload" 
+              :disabled="isDownloading"
+              class="w-full py-4 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <span v-if="!isDownloading">🚀 一键批量下载成品图</span>
+              <span v-else class="flex items-center gap-2">
+                <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                正在导出中...
+              </span>
+            </button>
+            <div v-if="isDownloading" class="text-center text-xs text-white/50">
+              已导出 {{ exportIndex }} / {{ downloadCount }} 张
+            </div>
+          </div>
         
         <p class="text-center text-[10px] text-white/30 tracking-wide leading-relaxed">
           点击一键下载将自动循环生成新内容并导出高清图片<br/>
