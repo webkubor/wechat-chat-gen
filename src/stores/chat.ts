@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { watch } from 'vue'
 import { useCorpusStore } from './corpus'
 import { localDB } from '../utils/localdb'
 import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_AVATARS, PRESET_SYSTEMS } from '../config/presets'
@@ -14,22 +15,33 @@ export const useChatStore = defineStore('chat', {
     nicknameColor: '#adadad',
     nicknameSize: 11,
     nicknameFont: 'sans-serif',
-    systemBgColor: 'rgba(245, 245, 245, 0.9)',
-    systemNameColor: '#6b7b95',
+    systemBgColor: '', // 将在 init 或 getter 中动态处理
+    systemNameColor: '', 
     isHighlightingCapture: false,
     backgroundImage: defaultBg, // 这里保持引用链接，只有用户上传的存 Blob
     deviceType: 'ios' as DeviceType,
     statusBarTheme: 'dark' as StatusBarTheme,
     statusBarTime: '23:30',
-    previewTheme: 'light' as PreviewTheme,
+    previewTheme: (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') as PreviewTheme,
     currentUser: { name: '我', avatar: '' },
     messages: [] as ChatMessage[]
   }),
   actions: {
     /**
-     * 初始化：加载保存的会话，并还原图片资源链接
+     * 初始化：加载保存的会话，还原图片资源，并启动联动监听
      */
     async init() {
+      // 1. 系统主题监听 (全局)
+      const themeMedia = window.matchMedia('(prefers-color-scheme: dark)')
+      themeMedia.addEventListener('change', (e) => {
+        this.previewTheme = e.matches ? 'dark' : 'light'
+      })
+
+      // 2. 内部逻辑联动：预览主题 -> 状态栏主题
+      watch(() => this.previewTheme, (newTheme) => {
+        this.statusBarTheme = newTheme === 'dark' ? 'light' : 'dark'
+      }, { immediate: true })
+
       try {
         const saved = await localDB.loadChatSession() as ChatSession
         if (saved) {

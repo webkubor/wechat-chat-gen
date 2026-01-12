@@ -104,9 +104,9 @@ const handleAvatarUpload = (e: Event) => {
     </div>
 
     <div class="grid grid-cols-2 gap-4">
-      <div class="group">
-        <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">顶部主题</label>
-        <BaseSelect v-model="chatStore.statusBarTheme" :options="statusBarThemeOptions" />
+      <div class="group text-center flex flex-col items-center justify-center">
+        <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2 w-full text-left">系统状态</label>
+        <span class="text-[10px] text-[#7A9D8C]/60 italic">状态栏配色已自动联动预览主题</span>
       </div>
       <div class="group">
         <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">提示内昵称颜色</label>

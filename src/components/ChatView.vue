@@ -21,22 +21,22 @@ const getBubbleStyle = (isMe?: boolean) => {
   }
 }
 
-const getArrowStyle = (isMe?: boolean) => {
-  const backgroundColor = getBubbleStyle(isMe).backgroundColor
-  return isMe
-    ? {
-        borderLeftColor: backgroundColor,
-        borderTopColor: 'transparent',
-        borderBottomColor: 'transparent',
-        borderRightColor: 'transparent'
-      }
-    : {
-        borderRightColor: backgroundColor,
-        borderTopColor: 'transparent',
-        borderBottomColor: 'transparent',
-        borderLeftColor: 'transparent'
-      }
+const getSystemMsgStyle = () => {
+  if (isDark.value) {
+    return {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      color: 'rgba(255, 255, 255, 0.5)'
+    }
+  }
+  return {
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    color: '#adadad'
+  }
 }
+
+const getSystemNameColor = computed(() => {
+  return isDark.value ? '#7d90a9' : '#576b95'
+})
 
 const handlePaste = (e: ClipboardEvent) => {
   e.preventDefault()
@@ -78,9 +78,8 @@ const toggleSide = (msgId: string) => {
       <!-- 系统消息 -->
       <div v-if="msg.type === 'system'" class="flex justify-center my-1 relative">
         <div 
-          class="text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block cursor-text"
-          :class="isDark ? 'text-white/85' : 'text-[#4b4b4b]'"
-          :style="{ backgroundColor: chatStore.systemBgColor }"
+          class="text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block cursor-text transition-colors duration-300"
+          :style="getSystemMsgStyle()"
           v-html="msg.content"
           contenteditable
           @blur="(e) => chatStore.updateMessage(msg.id, 'content', (e.target as HTMLElement).innerText)"
@@ -149,7 +148,7 @@ const toggleSide = (msgId: string) => {
 
 <style scoped>
 :deep(.system-name) {
-  color: v-bind('chatStore.systemNameColor');
+  color: v-bind('getSystemNameColor');
   font-size: v-bind('chatStore.nicknameSize + "px"');
   font-family: v-bind('chatStore.nicknameFont');
   font-weight: 500;
