@@ -2,10 +2,22 @@
 import { ref, onMounted } from 'vue'
 import { PRESET_QUOTES } from '../../config/presets'
 
-const version = __APP_VERSION__
+const version = ref('...')
 const currentQuote = ref('')
 
+const fetchVersion = async () => {
+  try {
+    const res = await fetch(`/version.json?t=${Date.now()}`)
+    const data = await res.json()
+    version.value = data.version
+  } catch (e) {
+    // 降级使用编译时定义的版本
+    version.value = __APP_VERSION__
+  }
+}
+
 onMounted(() => {
+  fetchVersion()
   currentQuote.value = PRESET_QUOTES[Math.floor(Math.random() * PRESET_QUOTES.length)] || ''
 })
 </script>
