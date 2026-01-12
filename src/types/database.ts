@@ -33,9 +33,9 @@ export interface ChatMessage {
   timestamp?: string
 }
 
-// --- 聊天会话实体 (单例) ---
+// --- 聊天会话实体 (单例存储) ---
 export interface ChatSession {
-  key: 'current'    // 固定主键
+  key: 'current'    // 固定主键，确保单例
   groupTitle: string
   memberCount: number
   backgroundImage: string
@@ -47,7 +47,7 @@ export interface ChatSession {
   updated_at: Date | any
 }
 
-// --- 集合/表名常量 ---
+// --- 集合与表名常量 ---
 export const DB_STORES = {
   CORPUS: 'corpus',
   CHAT_HISTORY: 'chat_history'

@@ -2,6 +2,9 @@ import { ref } from 'vue'
 
 export type ToastType = 'success' | 'error'
 
+/**
+ * 全局 Toast 提示逻辑
+ */
 export function useToast() {
   const toastMessage = ref('')
   const toastType = ref<ToastType>('success')

@@ -26,7 +26,7 @@ export const useChatStore = defineStore('chat', {
     messages: [] as ChatMessage[]
   }),
   actions: {
-    // --- Persistence ---
+    // --- 数据持久化 ---
     async init() {
       try {
         const saved = await localDB.loadChatSession() as ChatSession
@@ -38,7 +38,7 @@ export const useChatStore = defineStore('chat', {
           this.currentUser = saved.currentUser ?? this.currentUser
         }
       } catch (e) {
-        console.error('Failed to load chat session', e)
+        console.error('加载聊天会话失败', e)
       }
     },
 
@@ -57,11 +57,11 @@ export const useChatStore = defineStore('chat', {
           updated_at: new Date()
         })
       } catch (e) {
-        console.error('Failed to save chat session', e)
+        console.error('保存聊天会话失败', e)
       }
     },
 
-    // --- Mutators ---
+    // --- 状态变更 ---
     addMessage(msg: ChatMessage) {
       this.messages.push(msg)
       this.save()
@@ -94,7 +94,7 @@ export const useChatStore = defineStore('chat', {
       }
     },
 
-    // --- Generators ---
+    // --- 生成器逻辑 ---
     getRandomUser() {
       const name = PRESET_NAMES[Math.floor(Math.random() * PRESET_NAMES.length)] || '用户'
       const avatar = PRESET_AVATARS[Math.floor(Math.random() * PRESET_AVATARS.length)] || ''

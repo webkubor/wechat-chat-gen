@@ -4,7 +4,7 @@ import { localDB } from '../utils/localdb'
 import { PRESET_DIALOGUES } from '../config/presets'
 import { type CorpusItem, DB_STORES } from '../types/database'
 
-export type { CorpusItem } // 导出供组件使用
+export type { CorpusItem }
 
 const getPresets = (): CorpusItem[] => {
   return PRESET_DIALOGUES.map((content, index) => ({
@@ -17,7 +17,7 @@ const getPresets = (): CorpusItem[] => {
 
 export const useCorpusStore = defineStore('corpus', {
   state: () => ({
-    mode: 'local' as 'local' | 'cloud',
+    mode: 'local' as 'local' | 'cloud', // 当前存储模式
     dialogues: [] as CorpusItem[],
     isReady: false
   }),
@@ -88,7 +88,7 @@ export const useCorpusStore = defineStore('corpus', {
       for (const t of dialogues) if(t.trim()) await this.addEntry(t)
     },
 
-    // --- Local Engine ---
+    // --- 本地引擎 (IndexedDB) ---
     async fetchLocal(): Promise<CorpusItem[]> {
       const all = await localDB.getAll<CorpusItem>()
       return all.filter(i => i.type === 'dialogue')
@@ -106,7 +106,7 @@ export const useCorpusStore = defineStore('corpus', {
       await localDB.clear()
     },
 
-    // --- Cloud Engine ---
+    // --- 云端引擎 (CloudBase) ---
     async fetchCloud(): Promise<CorpusItem[]> {
       try {
         const { data } = await db.collection(DB_STORES.CORPUS)
@@ -115,7 +115,7 @@ export const useCorpusStore = defineStore('corpus', {
           .get()
         return data as CorpusItem[]
       } catch (e) {
-        console.error('Cloud fetch failed', e)
+        console.error('云端获取失败', e)
         return []
       }
     },
@@ -128,7 +128,7 @@ export const useCorpusStore = defineStore('corpus', {
           created_at: new Date()
         })
       } catch (e) {
-        console.error('Cloud add failed', e)
+        console.error('云端添加失败', e)
       }
     },
 
@@ -136,7 +136,7 @@ export const useCorpusStore = defineStore('corpus', {
       try {
         await db.collection(DB_STORES.CORPUS).doc(_id).remove()
       } catch (e) {
-        console.error('Cloud delete failed', e)
+        console.error('云端删除失败', e)
       }
     },
 
@@ -147,7 +147,7 @@ export const useCorpusStore = defineStore('corpus', {
           if (item._id) await db.collection(DB_STORES.CORPUS).doc(item._id).remove()
         }
       } catch (e) {
-        console.error('Cloud clear failed', e)
+        console.error('云端清空失败', e)
       }
     }
   }

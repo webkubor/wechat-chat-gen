@@ -10,18 +10,18 @@ class LocalDB {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION)
       
-      request.onerror = () => reject('LocalDB Open Error')
+      request.onerror = () => reject('本地数据库打开失败')
       
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
         
-        // Store 1: Corpus
+        // 表 1: 语料库
         if (!db.objectStoreNames.contains(DB_STORES.CORPUS)) {
           const store = db.createObjectStore(DB_STORES.CORPUS, { keyPath: 'id', autoIncrement: true })
           store.createIndex('type', 'type', { unique: false })
         }
 
-        // Store 2: Chat History
+        // 表 2: 聊天历史
         if (!db.objectStoreNames.contains(DB_STORES.CHAT_HISTORY)) {
           db.createObjectStore(DB_STORES.CHAT_HISTORY, { keyPath: 'key' })
         }
@@ -36,11 +36,11 @@ class LocalDB {
 
   private async getDB(): Promise<IDBDatabase> {
     if (!this.db) await this.init()
-    if (!this.db) throw new Error('DB not initialized')
+    if (!this.db) throw new Error('数据库未初始化')
     return this.db
   }
 
-  // --- Corpus Specific APIs ---
+  // --- 语料库相关 API ---
 
   async getAll<T>(): Promise<T[]> {
     const db = await this.getDB()
@@ -82,7 +82,7 @@ class LocalDB {
     })
   }
 
-  // --- Chat History APIs ---
+  // --- 聊天记录相关 API ---
 
   async saveChatSession(data: ChatSession): Promise<void> {
     const db = await this.getDB()
