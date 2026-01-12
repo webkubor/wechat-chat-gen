@@ -4,6 +4,10 @@ import router from './router'
 import './style.css'
 import App from './App.vue'
 import { auth } from './utils/cloudbase'
+import { initMessage } from './utils/message'
+
+// 初始化全局消息提示 (window.$message)
+initMessage()
 
 // CloudBase 匿名登录初始化
 const initCloudBase = async () => {

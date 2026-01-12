@@ -2,7 +2,6 @@
 import { ref, onMounted, watch } from 'vue'
 import { useChatStore } from '../stores/chat'
 import { useCorpusStore } from '../stores/corpus'
-import { useToast } from '../composables/useToast'
 import { useExport } from '../composables/useExport'
 
 // 子组件导入
@@ -19,10 +18,8 @@ const currentMode = ref<'chat' | 'join'>('chat')
 const genCount = ref(20)
 const downloadCount = ref(3)
 
-// 逻辑逻辑抽离
-const { toastMessage, toastType, showToast } = useToast()
+// 逻辑逻辑抽离 (现在不需要 showToast 了，由全局 window.$message 处理)
 const { isDownloading, exportIndex, handleQuickDownload, handleBatchDownload } = useExport({
-  showToast,
   handleGenerate: () => handleGenerate()
 })
 
@@ -55,17 +52,6 @@ const handleGenerate = () => {
 
 <template>
   <div class="space-y-8 relative">
-    <!-- Toast 提示通知 -->
-    <transition name="toast">
-      <div
-        v-if="toastMessage"
-        class="fixed top-6 right-6 z-[100] px-4 py-2 rounded-xl text-xs font-medium shadow-2xl backdrop-blur-md border"
-        :class="toastType === 'error' ? 'bg-red-500/20 text-red-100 border-red-400/40' : 'bg-emerald-500/20 text-emerald-100 border-emerald-400/40'"
-      >
-        {{ toastMessage }}
-      </div>
-    </transition>
-    
     <!-- 1. 基础设置模块 -->
     <BasicConfig v-model:mode="currentMode" />
 
@@ -86,8 +72,3 @@ const handleGenerate = () => {
     <ConfigFooter />
   </div>
 </template>
-
-<style scoped>
-.toast-enter-active, .toast-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-6px); }
-</style>

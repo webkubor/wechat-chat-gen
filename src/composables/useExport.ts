@@ -3,12 +3,11 @@ import { toBlob, toCanvas } from 'html-to-image'
 import JSZip from 'jszip'
 
 interface ExportOptions {
-  showToast: (msg: string, type?: 'success' | 'error') => void
   handleGenerate: () => void
 }
 
 /**
- * 封装截图导出逻辑
+ * 封装截图导出逻辑，使用全局 window.$message 进行提示
  */
 export function useExport(options: ExportOptions) {
   const isDownloading = ref(false)
@@ -21,20 +20,16 @@ export function useExport(options: ExportOptions) {
     link.style.display = 'none'
     document.body.appendChild(link)
     link.click()
-    // 延时释放，确保浏览器已开始处理下载
     setTimeout(() => {
       link.remove()
       URL.revokeObjectURL(link.href)
     }, 100)
   }
 
-  /**
-   * 快捷导出当前 PNG
-   */
   const handleQuickDownload = async () => {
     const element = document.getElementById('wechat-screen')
     if (!element) {
-      options.showToast('未找到预览区域，无法导出', 'error')
+      window.$message.error('未找到预览区域，无法导出')
       return
     }
 
@@ -48,21 +43,19 @@ export function useExport(options: ExportOptions) {
 
       if (!blob) throw new Error('Blob 生成失败')
       triggerDownload(`wechat-preview-${Date.now()}.png`, blob)
+      window.$message.success('预览图导出成功')
     } catch (err) {
       console.error('导出失败:', err)
-      options.showToast('导出失败，请重试', 'error')
+      window.$message.error('导出失败，请重试')
     }
   }
 
-  /**
-   * 渲染单张裁切后的图片 Blob
-   */
   const renderImageBlob = async (index: number) => {
     const element = document.getElementById('wechat-screen')
     const header = document.getElementById('wechat-titlebar')
     const inputBar = document.getElementById('wechat-input-bar')
     if (!element || !header || !inputBar) {
-      options.showToast('导出失败：找不到截图区域', 'error')
+      window.$message.error('导出失败：找不到截图区域')
       return null
     }
 
@@ -73,7 +66,6 @@ export function useExport(options: ExportOptions) {
       const cropWidth = element.offsetWidth
       const exportHeight = cropHeight > 0 ? cropHeight : element.offsetHeight
 
-      // 1. 生成全图 Canvas
       const fullCanvas = await toCanvas(element, {
         cacheBust: true,
         backgroundColor: '#ededed',
@@ -81,14 +73,12 @@ export function useExport(options: ExportOptions) {
         skipAutoScale: true
       })
 
-      // 2. 创建裁切 Canvas (2x 适配)
       const cropCanvas = document.createElement('canvas')
       cropCanvas.width = cropWidth * 2
       cropCanvas.height = exportHeight * 2
       const ctx = cropCanvas.getContext('2d')
       if (!ctx) throw new Error('Canvas Context 创建失败')
 
-      // 3. 绘制指定区域
       ctx.drawImage(
         fullCanvas,
         0, cropTop * 2, cropWidth * 2, exportHeight * 2,
@@ -107,9 +97,6 @@ export function useExport(options: ExportOptions) {
     }
   }
 
-  /**
-   * 批量导出 ZIP
-   */
   const handleBatchDownload = async (downloadCount: number) => {
     if (isDownloading.value) return
     isDownloading.value = true
@@ -120,7 +107,6 @@ export function useExport(options: ExportOptions) {
       for (let i = 0; i < downloadCount; i++) {
         exportIndex.value = i + 1
         options.handleGenerate()
-        // 等待 DOM 更新和图片加载
         await new Promise(resolve => setTimeout(resolve, 800)) 
         const image = await renderImageBlob(i)
         if (image?.blob) zip.file(image.name, image.blob)
@@ -128,9 +114,9 @@ export function useExport(options: ExportOptions) {
 
       const zipBlob = await zip.generateAsync({ type: 'blob' })
       triggerDownload(`wechat-gen-${Date.now()}.zip`, zipBlob)
-      options.showToast('导出完成，已下载 ZIP', 'success')
+      window.$message.success('批量导出完成')
     } catch (e) {
-      options.showToast('批量导出失败', 'error')
+      window.$message.error('批量导出失败')
     } finally {
       isDownloading.value = false
       exportIndex.value = 0

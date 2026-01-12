@@ -77,9 +77,9 @@ const handleImport = async (e: Event) => {
     const dialogues = Array.isArray(parsed.dialogues) ? parsed.dialogues : (Array.isArray(parsed) ? parsed : [])
     
     await corpusStore.replaceAll(dialogues)
-    alert(`成功导入到【${currentModeLabel.value}】`)
+    window.$message.success(`成功导入到【${currentModeLabel.value}】`)
   } catch (err) {
-    alert('导入失败：请确认文件格式为 JSON 数组')
+    window.$message.error('导入失败：请确认文件格式为 JSON 数组')
   } finally {
     isBusy.value = false
     if (importInput.value) importInput.value.value = ''
