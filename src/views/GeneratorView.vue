@@ -76,8 +76,11 @@ onMounted(() => {
         <footer class="mt-12 pt-8 border-t border-white/5 text-center">
           <p class="text-xs text-white/30 mb-1">Feedback & Support</p>
           <a href="mailto:webkubor@163.com" class="text-sm font-medium text-[#7A9D8C] hover:text-[#A27B5C] transition-colors tracking-wide">webkubor@163.com</a>
-          <p class="text-[10px] text-white/35 mt-3 tracking-widest">好易美票务公司</p>
-          <p class="text-[9px] text-white/20 mt-3 tracking-[0.2em] uppercase">© 2026 Design by WebKubor</p>
+          <div class="mt-4 flex flex-col items-center">
+            <span class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-[#7A9D8C] font-mono border border-white/5">v{{ __APP_VERSION__ }}</span>
+            <p class="text-[10px] text-white/35 mt-3 tracking-widest">好易美票务公司</p>
+            <p class="text-[9px] text-white/20 mt-3 tracking-[0.2em] uppercase">© 2026 Design by WebKubor</p>
+          </div>
         </footer>
       </div>
     </div>
