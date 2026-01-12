@@ -37,26 +37,27 @@ defineEmits<{
     <div class="p-5 bg-white/5 rounded-2xl border border-white/5 space-y-6">
       <div class="flex flex-col gap-3">
         <div class="flex gap-3">
-          <button @click="$emit('generate')" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">生成预览</button>
-          <button @click="$emit('quickDownload')" class="flex-1 py-3.5 bg-white/10 hover:bg-white/15 text-white rounded-xl font-semibold text-sm border border-white/10 transition-all active:scale-[0.98]">下载当前</button>
+          <button @click="$emit('generate')" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">生成更多内容</button>
         </div>
 
-        <div class="flex items-center justify-between text-[11px] text-white/40">
-          <button @click="chatStore.isHighlightingCapture = !chatStore.isHighlightingCapture" class="hover:text-white/70 transition-colors">
-            {{ chatStore.isHighlightingCapture ? '隐藏截图范围' : '显示截图范围' }}
-          </button>
+        <div class="flex items-center justify-end text-[11px] text-white/40">
           <button @click="chatStore.clearMessages()" class="hover:text-red-400 transition-colors">清空消息</button>
         </div>
-
-        <button @click="$emit('addToQueue')" :disabled="isQueueing" class="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-          <svg v-if="isQueueing" class="animate-spin h-4 w-4 text-white/70" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <span>{{ isQueueing ? '正在加入队列...' : '加入队列' }}</span>
-        </button>
 
         <div class="rounded-xl border border-white/10 bg-black/10 p-3">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[10px] text-white/40 uppercase tracking-widest">待下载队列</span>
-            <button v-if="queue.length" @click="$emit('clearQueue')" class="text-[10px] text-white/40 hover:text-white/70 transition-colors">清空队列</button>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2 text-[10px] text-white/40 hover:text-white/70 transition-colors cursor-pointer select-none">
+                <span class="relative inline-flex items-center">
+                  <input v-model="chatStore.isHighlightingCapture" type="checkbox" class="sr-only peer" />
+                  <span class="w-8 h-4 bg-white/10 border border-white/10 rounded-full transition-all peer-checked:bg-[#7A9D8C]/60 peer-checked:border-[#7A9D8C]/60"></span>
+                  <span class="absolute left-0.5 top-0.5 w-3 h-3 rounded-full bg-white/60 transition-all peer-checked:translate-x-4"></span>
+                </span>
+                截图范围
+              </label>
+              <button v-if="queue.length" @click="$emit('clearQueue')" class="text-[10px] text-white/40 hover:text-white/70 transition-colors">清空队列</button>
+            </div>
           </div>
           <div v-if="queue.length" class="grid grid-cols-4 gap-2">
             <div v-for="item in queue" :key="item.id" class="relative rounded-md overflow-hidden border border-white/10 bg-white/5">
@@ -70,15 +71,18 @@ defineEmits<{
           </div>
           <div v-if="queue.length" class="text-center text-[10px] text-white/30 mt-3">点击缩略图预览</div>
           <div v-else class="text-center text-[10px] text-white/30 py-3">暂无队列预览</div>
+          <button @click="$emit('addToQueue')" :disabled="isQueueing" class="mt-3 w-full py-3 bg-white/10 hover:bg-white/15 text-white rounded-xl font-semibold text-sm border border-white/10 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            <svg v-if="isQueueing" class="animate-spin h-4 w-4 text-white/70" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <span>{{ isQueueing ? '加入中...' : '加入队列' }}</span>
+          </button>
+          <button v-if="queue.length" @click="$emit('batchDownload')" :disabled="isDownloading" class="mt-3 w-full py-3 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-semibold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+            <span v-if="!isDownloading">批量下载（{{ queue.length }}）</span>
+            <span v-else class="flex items-center gap-2">
+              <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              正在导出中...
+            </span>
+          </button>
         </div>
-
-        <button @click="$emit('batchDownload')" :disabled="isDownloading || queue.length === 0" class="w-full py-4 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
-          <span v-if="!isDownloading">批量下载（{{ queue.length }}）</span>
-          <span v-else class="flex items-center gap-2">
-            <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            正在导出中...
-          </span>
-        </button>
         <div v-if="isDownloading" class="text-center text-xs text-white/50">已导出 {{ exportIndex }} / {{ queue.length }} 张</div>
       </div>
       
