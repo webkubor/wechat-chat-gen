@@ -1,26 +1,12 @@
 import { ref, onBeforeUnmount } from 'vue'
-import { toCanvas } from 'html-to-image'
+import { toBlob } from 'html-to-image'
 import JSZip from 'jszip'
+import { localDB } from '../utils/localdb'
 
 interface QueueItem {
   id: string
   blob: Blob
   url: string
-  dataUrl: string
-}
-
-const STORAGE_KEY = 'wechat_preview_queue'
-
-const dataUrlToBlob = (dataUrl: string) => {
-  const [header, body] = dataUrl.split(',')
-  if (!header || !body) throw new Error('无效的 data URL')
-  const match = /data:(.*?);base64/.exec(header)
-  const mime = match?.[1] || 'image/png'
-  const binary = atob(body)
-  const len = binary.length
-  const bytes = new Uint8Array(len)
-  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i)
-  return new Blob([bytes], { type: mime })
 }
 
 /**
@@ -31,27 +17,20 @@ export function useExport() {
   const exportIndex = ref(0)
   const queue = ref<QueueItem[]>([])
 
-  const persistQueue = () => {
-    const payload = queue.value.map(item => ({ id: item.id, dataUrl: item.dataUrl }))
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
-  }
-
-  const restoreQueue = () => {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return
+  const restoreQueue = async () => {
     try {
-      const items = JSON.parse(raw) as Array<{ id: string; dataUrl: string }>
+      const items = await localDB.getAllPreviewQueueItems()
       queue.value = items.map(item => {
-        const blob = dataUrlToBlob(item.dataUrl)
-        const url = URL.createObjectURL(blob)
-        return { id: item.id, dataUrl: item.dataUrl, blob, url }
+        const url = URL.createObjectURL(item.blob)
+        return { id: item.id, blob: item.blob, url }
       })
     } catch (e) {
-      localStorage.removeItem(STORAGE_KEY)
+      console.error('预览队列恢复失败', e)
+      window.$message.error('预览队列恢复失败')
     }
   }
 
-  restoreQueue()
+  localDB.init().then(() => restoreQueue()).catch(() => {})
 
   const triggerDownload = (name: string, blob: Blob) => {
     const link = document.createElement('a')
@@ -66,7 +45,7 @@ export function useExport() {
     }, 100)
   }
 
-  const capturePreviewCanvas = async () => {
+  const capturePreviewBlob = async () => {
     const element = document.getElementById('wechat-screen')
     if (!element) {
       window.$message.error('未找到预览区域，无法导出')
@@ -74,7 +53,7 @@ export function useExport() {
     }
 
     try {
-      return await toCanvas(element, {
+      return await toBlob(element, {
         cacheBust: true,
         backgroundColor: '#ededed',
         pixelRatio: 2,
@@ -88,27 +67,31 @@ export function useExport() {
   }
 
   const handleQuickDownload = async () => {
-    const canvas = await capturePreviewCanvas()
-    if (!canvas) return
-    canvas.toBlob((blob) => {
-      if (!blob) return
-      triggerDownload(`wechat-preview-${Date.now()}.png`, blob)
-      window.$message.success('预览图导出成功')
-    }, 'image/png')
+    const blob = await capturePreviewBlob()
+    if (!blob) {
+      window.$message.error('导出失败，请重试')
+      return
+    }
+    triggerDownload(`wechat-preview-${Date.now()}.png`, blob)
+    window.$message.success('预览图导出成功')
   }
 
   const addToQueue = async () => {
-    const canvas = await capturePreviewCanvas()
-    if (!canvas) return
-    const dataUrl = canvas.toDataURL('image/png')
-    canvas.toBlob((blob) => {
-      if (!blob) return
-      const id = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-      const url = URL.createObjectURL(blob)
-      queue.value.push({ id, blob, url, dataUrl })
-      persistQueue()
-      window.$message.success('已加入待下载队列')
-    }, 'image/png')
+    const blob = await capturePreviewBlob()
+    if (!blob) {
+      window.$message.error('加入队列失败，请重试')
+      return
+    }
+    const id = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    const url = URL.createObjectURL(blob)
+    queue.value.push({ id, blob, url })
+    try {
+      await localDB.savePreviewQueueItem({ id, blob, created_at: new Date() })
+    } catch (e) {
+      console.error('队列持久化失败', e)
+      window.$message.error('队列持久化失败，刷新后会丢失')
+    }
+    window.$message.success('已加入待下载队列')
   }
 
   const removeFromQueue = (id: string) => {
@@ -116,13 +99,19 @@ export function useExport() {
     if (index === -1) return
     URL.revokeObjectURL(queue.value[index].url)
     queue.value.splice(index, 1)
-    persistQueue()
+    localDB.deletePreviewQueueItem(id).catch((e) => {
+      console.error('队列删除失败', e)
+      window.$message.error('队列删除失败')
+    })
   }
 
   const clearQueue = () => {
     queue.value.forEach(item => URL.revokeObjectURL(item.url))
     queue.value = []
-    localStorage.removeItem(STORAGE_KEY)
+    localDB.clearPreviewQueue().catch((e) => {
+      console.error('队列清空失败', e)
+      window.$message.error('队列清空失败')
+    })
   }
 
   const handleBatchDownload = async () => {

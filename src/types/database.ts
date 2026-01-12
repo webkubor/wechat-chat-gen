@@ -47,8 +47,16 @@ export interface ChatSession {
   updated_at: Date | any
 }
 
+// --- 预览队列项 ---
+export interface PreviewQueueItem {
+  id: string
+  blob: Blob
+  created_at: Date | any
+}
+
 // --- 集合与表名常量 ---
 export const DB_STORES = {
   CORPUS: 'corpus',
-  CHAT_HISTORY: 'chat_history'
+  CHAT_HISTORY: 'chat_history',
+  PREVIEW_QUEUE: 'preview_queue'
 } as const

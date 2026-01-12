@@ -4,7 +4,7 @@ import { useChatStore } from '../../stores/chat'
 const chatStore = useChatStore()
 const exportIndex = defineModel<number>('exportIndex', { required: true })
 const isDownloading = defineModel<boolean>('isDownloading', { required: true })
-const queue = defineModel<Array<{ id: string; url: string; dataUrl?: string }>>('queue', { required: true })
+const queue = defineModel<Array<{ id: string; url: string }>>('queue', { required: true })
 
 defineEmits<{
   (e: 'generate'): void

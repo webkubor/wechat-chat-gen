@@ -1,9 +1,10 @@
-import { DB_STORES, type ChatSession } from '../types/database'
+import { DB_STORES, type ChatSession, type PreviewQueueItem } from '../types/database'
 
 const DB_NAME = 'wechat_gen_db'
-const DB_VERSION = 3 // 升级版本以增加资源仓库
+const DB_VERSION = 4 // 升级版本以增加预览队列表
 const STORE_CORPUS = DB_STORES.CORPUS
 const STORE_CHAT = DB_STORES.CHAT_HISTORY
+const STORE_PREVIEW_QUEUE = DB_STORES.PREVIEW_QUEUE
 const STORE_RESOURCES = 'resources' // 新增图片资源表
 
 class LocalDB {
@@ -25,6 +26,10 @@ class LocalDB {
 
         if (!db.objectStoreNames.contains(STORE_CHAT)) {
           db.createObjectStore(STORE_CHAT, { keyPath: 'key' })
+        }
+
+        if (!db.objectStoreNames.contains(STORE_PREVIEW_QUEUE)) {
+          db.createObjectStore(STORE_PREVIEW_QUEUE, { keyPath: 'id' })
         }
 
         // 新增资源库：存储 File/Blob 对象
@@ -129,6 +134,48 @@ class LocalDB {
       const req = tx.objectStore(STORE_CHAT).get('current')
       req.onsuccess = () => resolve(req.result as ChatSession || null)
       req.onerror = () => reject(req.error)
+    })
+  }
+
+  // --- 预览队列 API ---
+
+  async savePreviewQueueItem(item: PreviewQueueItem): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PREVIEW_QUEUE, 'readwrite')
+      tx.objectStore(STORE_PREVIEW_QUEUE).put(item)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  async getAllPreviewQueueItems(): Promise<PreviewQueueItem[]> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PREVIEW_QUEUE, 'readonly')
+      const req = tx.objectStore(STORE_PREVIEW_QUEUE).getAll()
+      req.onsuccess = () => resolve(req.result as PreviewQueueItem[])
+      req.onerror = () => reject(req.error)
+    })
+  }
+
+  async deletePreviewQueueItem(id: string): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PREVIEW_QUEUE, 'readwrite')
+      tx.objectStore(STORE_PREVIEW_QUEUE).delete(id)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  async clearPreviewQueue(): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PREVIEW_QUEUE, 'readwrite')
+      tx.objectStore(STORE_PREVIEW_QUEUE).clear()
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
     })
   }
 }
