@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import MusicPlayer from './components/MusicPlayer.vue'
+import PWAPrompt from './components/PWAPrompt.vue'
 
 const hasUpdate = ref(false)
 const newVersion = ref('')
@@ -44,6 +45,7 @@ onMounted(() => {
   <div class="min-h-screen w-full font-sans text-slate-200 overflow-x-hidden relative selection:bg-[#7A9D8C] selection:text-white">
     
     <MusicPlayer />
+    <PWAPrompt />
 
     <!-- Update Notification -->
     <transition name="slide-up">

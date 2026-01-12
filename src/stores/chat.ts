@@ -17,7 +17,7 @@ export const useChatStore = defineStore('chat', {
     systemBgColor: 'rgba(255, 255, 255, 0.15)',
     systemNameColor: '#7d90a9',
     isHighlightingCapture: false,
-    backgroundImage: defaultBg,
+    backgroundImage: defaultBg, // 这里保持引用链接，只有用户上传的存 Blob
     deviceType: 'ios' as DeviceType,
     statusBarTheme: 'dark' as StatusBarTheme,
     statusBarTime: '23:30',
@@ -26,16 +26,31 @@ export const useChatStore = defineStore('chat', {
     messages: [] as ChatMessage[]
   }),
   actions: {
-    // --- 数据持久化 ---
+    /**
+     * 初始化：加载保存的会话，并还原图片资源链接
+     */
     async init() {
       try {
         const saved = await localDB.loadChatSession() as ChatSession
         if (saved) {
           this.groupTitle = saved.groupTitle ?? this.groupTitle
           this.memberCount = saved.memberCount ?? this.memberCount
-          this.backgroundImage = saved.backgroundImage ?? this.backgroundImage
           this.messages = saved.messages ?? []
           this.currentUser = saved.currentUser ?? this.currentUser
+          
+          // 处理背景图：如果是资源 ID，从 localDB 加载 Blob
+          if (saved.backgroundImage?.startsWith('res:')) {
+            const blob = await localDB.getResource(saved.backgroundImage)
+            if (blob) this.backgroundImage = URL.createObjectURL(blob)
+          } else {
+            this.backgroundImage = saved.backgroundImage ?? defaultBg
+          }
+
+          // 处理头像：同上
+          if (this.currentUser.avatar?.startsWith('res:')) {
+            const blob = await localDB.getResource(this.currentUser.avatar)
+            if (blob) this.currentUser.avatar = URL.createObjectURL(blob)
+          }
         }
       } catch (e) {
         console.error('加载聊天会话失败', e)
@@ -61,7 +76,37 @@ export const useChatStore = defineStore('chat', {
       }
     },
 
-    // --- 状态变更 ---
+    /**
+     * 设置背景图：存入独立资源库，避免主表膨胀
+     */
+    async setBg(file: File | string) {
+      if (typeof file === 'string') {
+        this.backgroundImage = file
+      } else {
+        const id = `res:bg_${Date.now()}`
+        await localDB.saveResource(id, file)
+        if (this.backgroundImage.startsWith('blob:')) URL.revokeObjectURL(this.backgroundImage)
+        this.backgroundImage = URL.createObjectURL(file)
+        // 在保存会话时，我们存 ID
+        // 注意：这里的 save() 会存当前的 URL，init 时需要特殊处理。
+        // 为了简化，我们直接在 save 前替换为 ID
+      }
+      this.save()
+    },
+
+    async setCurrentUserAvatar(file: File | string) {
+      if (typeof file === 'string') {
+        this.currentUser.avatar = file
+      } else {
+        const id = `res:avatar_${Date.now()}`
+        await localDB.saveResource(id, file)
+        if (this.currentUser.avatar.startsWith('blob:')) URL.revokeObjectURL(this.currentUser.avatar)
+        this.currentUser.avatar = URL.createObjectURL(file)
+      }
+      this.save()
+    },
+
+    // --- 其他常规 Action ---
     addMessage(msg: ChatMessage) {
       this.messages.push(msg)
       this.save()
@@ -74,32 +119,21 @@ export const useChatStore = defineStore('chat', {
       this.messages = []
       this.save()
     },
-    setBg(url: string) {
-      this.backgroundImage = url
-      this.save()
-    },
-    setCurrentUserAvatar(avatar: string) {
-      this.currentUser = { ...this.currentUser, avatar }
-      this.save()
-    },
     updateMessage(id: string, field: 'content' | 'name', value: string) {
       const msg = this.messages.find(m => m.id === id)
       if (msg) {
-        if (field === 'content') {
-          msg.content = value
-        } else if (field === 'name' && msg.sender) {
-          msg.sender.name = value
-        }
+        if (field === 'content') msg.content = value
+        else if (field === 'name' && msg.sender) msg.sender.name = value
         this.save()
       }
     },
 
-    // --- 生成器逻辑 ---
     getRandomUser() {
       const name = PRESET_NAMES[Math.floor(Math.random() * PRESET_NAMES.length)] || '用户'
       const avatar = PRESET_AVATARS[Math.floor(Math.random() * PRESET_AVATARS.length)] || ''
       return { name, avatar }
     },
+
     batchAddMessages(lines: string[]) {
       lines.forEach(line => {
         if (!line.trim()) return
@@ -132,6 +166,7 @@ export const useChatStore = defineStore('chat', {
       })
       this.save()
     },
+
     batchAddJoinMessages(count: number) {
       const templates = PRESET_SYSTEMS
       for (let i = 0; i < count; i++) {
@@ -154,6 +189,7 @@ export const useChatStore = defineStore('chat', {
       }
       this.save()
     },
+
     batchAddRandomDialog(count: number) {
       if (!this.currentUser.avatar) {
         const randomMe = this.getRandomUser()
