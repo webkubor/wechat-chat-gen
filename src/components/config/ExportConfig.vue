@@ -44,7 +44,9 @@ defineEmits<{
           </div>
           <div v-if="queue.length" class="grid grid-cols-4 gap-2">
             <div v-for="item in queue" :key="item.id" class="relative rounded-md overflow-hidden border border-white/10 bg-white/5">
-              <img :src="item.url" class="w-full h-14 object-cover" />
+              <div class="w-full" :class="chatStore.exportRatio === '3:4' ? 'aspect-[3/4]' : 'aspect-[9/16]'">
+                <img :src="item.url" class="w-full h-full object-cover" />
+              </div>
               <button @click="$emit('removeFromQueue', item.id)" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white text-[10px] leading-5">×</button>
             </div>
           </div>

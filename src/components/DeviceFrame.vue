@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useChatStore } from '../stores/chat'
 import StatusBarIcons from './StatusBarIcons.vue'
 import InputBarIcons from './InputBarIcons.vue'
 import AndroidNavBar from './AndroidNavBar.vue'
 
 const chatStore = useChatStore()
+const screenRef = ref<HTMLElement | null>(null)
 const scrollContainer = ref<HTMLElement | null>(null)
 const isDark = computed(() => chatStore.previewTheme === 'dark')
+const captureHeight = ref(0)
 
 const backgroundStyle = computed(() => {
   const hasImage = Boolean(chatStore.backgroundImage)
@@ -23,12 +25,43 @@ const backgroundStyle = computed(() => {
   }
 })
 
+const updateCaptureHeight = () => {
+  const element = screenRef.value
+  if (!element) return
+  const width = element.clientWidth
+  const height = element.clientHeight
+  const targetHeight = Math.round(width * 4 / 3)
+  captureHeight.value = chatStore.exportRatio === '3:4'
+    ? Math.min(targetHeight, height)
+    : height
+}
+
 watch(() => chatStore.messages.length, () => {
   nextTick(() => {
     if (scrollContainer.value) {
       scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
     }
   })
+})
+
+let resizeObserver: ResizeObserver | null = null
+
+watch(() => chatStore.exportRatio, () => {
+  nextTick(() => updateCaptureHeight())
+})
+
+onMounted(() => {
+  updateCaptureHeight()
+  if (screenRef.value && 'ResizeObserver' in window) {
+    resizeObserver = new ResizeObserver(() => updateCaptureHeight())
+    resizeObserver.observe(screenRef.value)
+  }
+  window.addEventListener('resize', updateCaptureHeight)
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+  window.removeEventListener('resize', updateCaptureHeight)
 })
 </script>
 
@@ -37,6 +70,7 @@ watch(() => chatStore.messages.length, () => {
     <!-- 手机外壳 (PC端显示高端金属工艺感，移动端全屏) -->
     <div 
       id="wechat-screen"
+      ref="screenRef"
       :class="[
         'relative transition-all duration-500 bg-[#121212] box-content',
         chatStore.isHighlightingCapture ? 'ring-4 ring-[#7A9D8C] ring-offset-8 animate-pulse' : '',
@@ -48,6 +82,13 @@ watch(() => chatStore.messages.length, () => {
           : 'md:w-[360px] md:h-[780px] md:rounded-[35px]'
       ]"
     >
+      <div
+        v-if="chatStore.isHighlightingCapture"
+        class="absolute left-0 top-0 z-40 pointer-events-none"
+        :style="{ width: '100%', height: `${captureHeight}px` }"
+      >
+        <div class="absolute inset-0 border-2 border-[#7A9D8C] rounded-[inherit] bg-[#7A9D8C]/5"></div>
+      </div>
       <!-- 屏幕内阴影 (仅PC端) -->
       <div class="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0_0_2px_rgba(255,255,255,0.1)] z-40 hidden md:block"></div>
 

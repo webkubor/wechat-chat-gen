@@ -10,6 +10,11 @@ const themeOptions = [
   { label: '深色', value: 'dark' }
 ]
 
+const exportRatioOptions = [
+  { label: '完整截图', value: 'full' },
+  { label: '3:4 高度截图', value: '3:4' }
+]
+
 const handleBgUpload = (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (file) {
@@ -54,6 +59,11 @@ const handleBgUpload = (e: Event) => {
         <span class="text-xs text-white/40 group-hover:text-[#7A9D8C] transition-colors">上传图片</span>
         <input type="file" @change="handleBgUpload" accept="image/*" class="hidden" />
       </label>
+    </div>
+
+    <div class="group">
+      <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">导出比例</label>
+      <BaseSelect v-model="chatStore.exportRatio" :options="exportRatioOptions" />
     </div>
 
     <div class="grid grid-cols-2 gap-4">

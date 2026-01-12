@@ -3,10 +3,10 @@ import { watch } from 'vue'
 import { useCorpusStore } from './corpus'
 import { localDB } from '../utils/localdb'
 import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_AVATARS, PRESET_SYSTEMS } from '../config/presets'
-import { type ChatMessage, type DeviceType, type StatusBarTheme, type PreviewTheme, type ChatSession } from '../types/database'
+import { type ChatMessage, type DeviceType, type StatusBarTheme, type PreviewTheme, type ExportRatio, type ChatSession } from '../types/database'
 import defaultBg from '../assets/bg.jpg'
 
-export type { ChatMessage as Message, DeviceType, StatusBarTheme, PreviewTheme }
+export type { ChatMessage as Message, DeviceType, StatusBarTheme, PreviewTheme, ExportRatio }
 
 export const useChatStore = defineStore('chat', {
   state: () => ({
@@ -19,6 +19,7 @@ export const useChatStore = defineStore('chat', {
     systemNameColor: '', 
     isHighlightingCapture: false,
     backgroundImage: defaultBg, // 这里保持引用链接，只有用户上传的存 Blob
+    exportRatio: '3:4' as ExportRatio,
     deviceType: 'ios' as DeviceType,
     statusBarTheme: 'dark' as StatusBarTheme,
     statusBarTime: '23:30',
@@ -49,6 +50,7 @@ export const useChatStore = defineStore('chat', {
           this.memberCount = saved.memberCount ?? this.memberCount
           this.messages = saved.messages ?? []
           this.currentUser = saved.currentUser ?? this.currentUser
+          this.exportRatio = saved.exportRatio ?? this.exportRatio
           
           // 处理背景图：如果是资源 ID，从 localDB 加载 Blob
           if (saved.backgroundImage?.startsWith('res:')) {
@@ -82,6 +84,7 @@ export const useChatStore = defineStore('chat', {
           groupTitle: this.groupTitle,
           memberCount: this.memberCount,
           backgroundImage: this.backgroundImage,
+          exportRatio: this.exportRatio,
           messages: JSON.parse(JSON.stringify(this.messages)),
           currentUser: JSON.parse(JSON.stringify(this.currentUser))
         }

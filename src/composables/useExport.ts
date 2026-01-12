@@ -2,6 +2,7 @@ import { ref, onBeforeUnmount } from 'vue'
 import { toCanvas } from 'html-to-image'
 import JSZip from 'jszip'
 import { localDB } from '../utils/localdb'
+import { useChatStore } from '../stores/chat'
 
 interface QueueItem {
   id: string
@@ -13,6 +14,7 @@ interface QueueItem {
  * 封装截图导出逻辑，使用全局 window.$message 进行提示
  */
 export function useExport() {
+  const chatStore = useChatStore()
   const isDownloading = ref(false)
   const exportIndex = ref(0)
   const queue = ref<QueueItem[]>([])
@@ -47,9 +49,7 @@ export function useExport() {
 
   const capturePreviewBlob = async () => {
     const element = document.getElementById('wechat-screen')
-    const header = document.getElementById('wechat-titlebar')
-    const inputBar = document.getElementById('wechat-input-bar')
-    if (!element || !header || !inputBar) {
+    if (!element) {
       window.$message.error('未找到截图区域，无法导出')
       return null
     }
@@ -63,11 +63,13 @@ export function useExport() {
       })
 
       const scale = fullCanvas.width / element.offsetWidth
-      const cropTop = Math.max(0, header.offsetTop)
-      const cropBottom = Math.max(0, inputBar.offsetTop)
-      const cropHeight = Math.max(0, cropBottom - cropTop)
       const cropWidth = element.offsetWidth
-      const exportHeight = cropHeight > 0 ? cropHeight : element.offsetHeight
+      const cropTop = 0
+      const fullHeight = element.offsetHeight
+      const targetHeight = Math.round(cropWidth * 4 / 3)
+      const exportHeight = chatStore.exportRatio === '3:4'
+        ? Math.min(targetHeight, fullHeight)
+        : fullHeight
 
       const cropCanvas = document.createElement('canvas')
       cropCanvas.width = Math.round(cropWidth * scale)

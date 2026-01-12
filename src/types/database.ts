@@ -7,6 +7,7 @@
 export type DeviceType = 'ios' | 'android'
 export type StatusBarTheme = 'light' | 'dark'
 export type PreviewTheme = 'light' | 'dark'
+export type ExportRatio = 'full' | '3:4'
 
 // --- 语料库实体 ---
 export interface CorpusItem {
@@ -39,6 +40,7 @@ export interface ChatSession {
   groupTitle: string
   memberCount: number
   backgroundImage: string
+  exportRatio?: ExportRatio
   messages: ChatMessage[]
   currentUser: {
     name: string
