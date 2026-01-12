@@ -7,6 +7,21 @@ const hasUpdate = ref(false)
 const newVersion = ref('')
 const isDismissed = ref(false) // 是否手动忽略了本次更新
 
+/**
+ * 语义化版本比对: v1 > v2 返回 1, v1 < v2 返回 -1, 相等返回 0
+ */
+const compareVersions = (v1: string, v2: string) => {
+  const parts1 = v1.replace(/^v/, '').split('.').map(Number)
+  const parts2 = v2.replace(/^v/, '').split('.').map(Number)
+  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+    const num1 = parts1[i] || 0
+    const num2 = parts2[i] || 0
+    if (num1 > num2) return 1
+    if (num1 < num2) return -1
+  }
+  return 0
+}
+
 const checkUpdate = async () => {
   // 如果当前已经显示更新提示或已经手动忽略，则不再检查
   if (hasUpdate.value || isDismissed.value) return
@@ -15,8 +30,9 @@ const checkUpdate = async () => {
     // 添加时间戳防止缓存
     const res = await fetch(`/version.json?t=${Date.now()}`)
     const data = await res.json()
-    // 简单对比：如果不相等则认为有更新
-    if (data.version !== __APP_VERSION__) {
+    
+    // 只有当服务器版本号 > 当前运行时版本号时，才触发更新提示
+    if (compareVersions(data.version, __APP_VERSION__) === 1) {
       hasUpdate.value = true
       newVersion.value = data.version
     }
