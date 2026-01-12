@@ -35,19 +35,16 @@ watch(() => chatStore.messages.length, () => {
     <div 
       id="wechat-screen"
       :class="[
-        'relative transition-all duration-500 bg-black box-content p-[2px]',
+        'relative transition-all duration-500 bg-[#121212] box-content',
         chatStore.isHighlightingCapture ? 'ring-4 ring-[#7A9D8C] ring-offset-8 animate-pulse' : '',
         chatStore.deviceType === 'ios' 
-          ? 'w-[375px] h-[812px] rounded-[55px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),inset_0_0_0_1px_rgba(255,255,255,0.1)]' 
-          : 'w-[360px] h-[780px] rounded-[35px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]'
+          ? 'w-[375px] h-[812px] rounded-[55px] shadow-[0_0_0_12px_#222,0_0_0_13px_#333,0_30px_60px_-15px_rgba(0,0,0,0.3)]' 
+          : 'w-[360px] h-[780px] rounded-[35px] shadow-[0_0_0_12px_#222,0_0_0_13px_#333,0_30px_60px_-15px_rgba(0,0,0,0.3)]'
       ]"
-      :style="{
-        border: '12px solid',
-        borderImageSource: 'linear-gradient(145deg, #333, #555, #222, #444, #111)',
-        borderImageSlice: 1,
-        borderRadius: chatStore.deviceType === 'ios' ? '55px' : '35px'
-      }"
     >
+      <!-- 屏幕内阴影，增加深度感 -->
+      <div class="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0_0_2px_rgba(255,255,255,0.1)] z-40"></div>
+
       <!-- 物理按键 (装饰性) -->
       <div class="absolute -left-[14px] top-32 w-[3px] h-8 bg-[#333] rounded-l-sm border-r border-black/20"></div>
       <div class="absolute -left-[14px] top-48 w-[3px] h-14 bg-[#333] rounded-l-sm border-r border-black/20"></div>
@@ -202,8 +199,9 @@ watch(() => chatStore.messages.length, () => {
   scrollbar-width: none;
 }
 
-/* 模拟 iPhone 屏幕的圆角裁切效果 */
+/* 模拟 iPhone 屏幕的圆角裁切效果，避免无 paint() 支持时整块不可见 */
 #wechat-screen {
-  mask-image: paint(smooth-corners);
+  overflow: hidden;
 }
+
 </style>

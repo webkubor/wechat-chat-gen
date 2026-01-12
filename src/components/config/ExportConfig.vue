@@ -32,12 +32,14 @@ defineEmits<{
       <div class="flex flex-col gap-3">
         <div class="flex gap-3">
           <button @click="$emit('generate')" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">刷新</button>
+          <button @click="chatStore.clearMessages()" class="flex-1 py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-medium text-sm border border-red-500/20 transition-all active:scale-[0.98]">清空</button>
           <button @click="$emit('quickDownload')" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">下载 PNG</button>
-          <button @click="chatStore.isHighlightingCapture = !chatStore.isHighlightingCapture" class="flex-1 py-3.5 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2" :class="chatStore.isHighlightingCapture ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-white/5 hover:bg-white/10 text-white/80'">
-            <span>{{ chatStore.isHighlightingCapture ? '🔆 停止闪烁' : '👁️ 预览截图区' }}</span>
-          </button>
         </div>
         
+        <button @click="chatStore.isHighlightingCapture = !chatStore.isHighlightingCapture" class="w-full py-3.5 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2" :class="chatStore.isHighlightingCapture ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-white/5 hover:bg-white/10 text-white/80'">
+          <span>{{ chatStore.isHighlightingCapture ? '🔆 停止闪烁预览截图区' : '👁️ 预览截图区' }}</span>
+        </button>
+
         <button @click="$emit('batchDownload')" :disabled="isDownloading" class="w-full py-4 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="!isDownloading">🚀 一键批量下载成品图</span>
           <span v-else class="flex items-center gap-2">

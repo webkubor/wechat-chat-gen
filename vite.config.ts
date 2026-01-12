@@ -66,5 +66,14 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  server: {
+    proxy: {
+      '/tcb-api': {
+        target: 'https://REDACTED_ENVID.ap-shanghai.tcb-api.tencentcloudapi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/tcb-api/, '')
+      }
+    }
   }
 })

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { db } from '../utils/cloudbase'
+import { db, isCloudEnabled } from '../utils/cloudbase'
 import { localDB } from '../utils/localdb'
 import { PRESET_DIALOGUES } from '../config/presets'
 import { type CorpusItem, DB_STORES } from '../types/database'
@@ -30,6 +30,7 @@ export const useCorpusStore = defineStore('corpus', {
     },
 
     async switchMode(mode: 'local' | 'cloud') {
+      if (mode === 'cloud' && !isCloudEnabled()) return
       this.mode = mode
       await this.loadAll()
     },
@@ -108,7 +109,10 @@ export const useCorpusStore = defineStore('corpus', {
 
     // --- 云端引擎 (CloudBase) ---
     async fetchCloud(): Promise<CorpusItem[]> {
+      if (!isCloudEnabled()) return []
       try {
+        const { initCloudBase } = await import('../utils/cloudbase')
+        await initCloudBase()
         const { data } = await db.collection(DB_STORES.CORPUS)
           .where({ type: 'dialogue' })
           .limit(1000)
@@ -121,7 +125,10 @@ export const useCorpusStore = defineStore('corpus', {
     },
 
     async addCloud(content: string) {
+      if (!isCloudEnabled()) return
       try {
+        const { initCloudBase } = await import('../utils/cloudbase')
+        await initCloudBase()
         await db.collection(DB_STORES.CORPUS).add({
           type: 'dialogue',
           content,
@@ -133,7 +140,10 @@ export const useCorpusStore = defineStore('corpus', {
     },
 
     async deleteCloud(_id: string) {
+      if (!isCloudEnabled()) return
       try {
+        const { initCloudBase } = await import('../utils/cloudbase')
+        await initCloudBase()
         await db.collection(DB_STORES.CORPUS).doc(_id).remove()
       } catch (e) {
         console.error('云端删除失败', e)
@@ -141,7 +151,10 @@ export const useCorpusStore = defineStore('corpus', {
     },
 
     async clearCloud() {
+      if (!isCloudEnabled()) return
       try {
+        const { initCloudBase } = await import('../utils/cloudbase')
+        await initCloudBase()
         const items = await this.fetchCloud()
         for (const item of items) {
           if (item._id) await db.collection(DB_STORES.CORPUS).doc(item._id).remove()

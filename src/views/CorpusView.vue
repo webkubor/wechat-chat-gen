@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useCorpusStore, type CorpusItem } from '../stores/corpus'
+import { isCloudEnabled } from '../utils/cloudbase'
 
 const corpusStore = useCorpusStore()
 const newContent = ref('')
@@ -9,12 +10,17 @@ const importInput = ref<HTMLInputElement | null>(null)
 
 const items = computed(() => corpusStore.dialogues)
 const currentModeLabel = computed(() => corpusStore.mode === 'local' ? '本地私享' : '云端同步')
+const cloudEnabled = isCloudEnabled()
 
 onMounted(() => {
   corpusStore.init()
 })
 
 const handleModeSwitch = (mode: 'local' | 'cloud') => {
+  if (mode === 'cloud' && !cloudEnabled) {
+    window.$message.info('云端同步暂时关闭，当前为本地私享模式')
+    return
+  }
   corpusStore.switchMode(mode)
 }
 
@@ -99,8 +105,16 @@ const handleImport = async (e: Event) => {
           </h1>
           <div class="bg-black/20 p-1 rounded-lg flex text-[10px] font-medium backdrop-blur-sm border border-white/5">
             <button @click="handleModeSwitch('local')" class="px-3 py-1 rounded-md transition-all duration-300" :class="corpusStore.mode === 'local' ? 'bg-[#7A9D8C] text-white shadow-lg' : 'text-white/40 hover:text-white/60'">本地私享</button>
-            <button @click="handleModeSwitch('cloud')" class="px-3 py-1 rounded-md transition-all duration-300" :class="corpusStore.mode === 'cloud' ? 'bg-[#A27B5C] text-white shadow-lg' : 'text-white/40 hover:text-white/60'">云端同步</button>
+            <button
+              @click="handleModeSwitch('cloud')"
+              :disabled="!cloudEnabled"
+              class="px-3 py-1 rounded-md transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+              :class="corpusStore.mode === 'cloud' ? 'bg-[#A27B5C] text-white shadow-lg' : 'text-white/40 hover:text-white/60'"
+            >
+              云端同步
+            </button>
           </div>
+          <span v-if="!cloudEnabled" class="text-[10px] text-white/30 tracking-widest">云端同步暂时关闭</span>
         </div>
         <p class="text-white/40 text-sm tracking-widest flex items-center gap-2">
           <span class="w-2 h-2 rounded-full" :class="corpusStore.mode === 'local' ? 'bg-[#7A9D8C]' : 'bg-[#A27B5C]'"></span>

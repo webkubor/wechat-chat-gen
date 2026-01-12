@@ -52,6 +52,12 @@ export const useChatStore = defineStore('chat', {
             if (blob) this.currentUser.avatar = URL.createObjectURL(blob)
           }
         }
+
+        // 如果没有消息，初始化一些预设对话
+        if (this.messages.length === 0) {
+          this.batchAddJoinMessages(1)
+          this.batchAddRandomDialog(5)
+        }
       } catch (e) {
         console.error('加载聊天会话失败', e)
       }

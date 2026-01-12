@@ -25,8 +25,10 @@ const { isDownloading, exportIndex, handleQuickDownload, handleBatchDownload } =
 
 onMounted(async () => {
   await corpusStore.init()
-  // 初始自动生成消息
-  chatStore.batchAddRandomDialog(20)
+  // 仅在消息为空时初始自动生成消息
+  if (chatStore.messages.length === 0) {
+    chatStore.batchAddRandomDialog(20)
+  }
 })
 
 // 监听模式切换
