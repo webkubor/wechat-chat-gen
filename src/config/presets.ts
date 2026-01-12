@@ -9,12 +9,28 @@ export const PRESET_DIALOGUES = [
   '有没有组队入场的？', '刚才在门口看到保姆车了！', '心跳已经120了'
 ]
 
+// 真实微信系统文案模板
+// 变量说明:
+// {inviter} - 邀请人
+// {invited} - 被邀请人
+// {link:撤销} - 蓝色可点击链接
 export const PRESET_SYSTEMS = [
-  '{name}邀请{invited}加入了群聊',
-  '{invited}通过扫描{name}分享的二维码加入群聊',
-  '{invited}通过群成员{name}分享的二维码加入群聊',
-  '{name}邀请{invited}、{other}加入了群聊',
-  '{invited}加入了群聊'
+  // 场景1: “我”邀请他人
+  '你邀请 {invited} 加入了群聊  <span class="system-link">撤销</span>',
+  '你邀请 {invited}、{other} 加入了群聊  <span class="system-link">撤销</span>',
+  '你邀请 {invited}、{other} 等 5 人加入了群聊  <span class="system-link">撤销</span>',
+  
+  // 场景2: 他人邀请
+  '{inviter} 邀请 {invited} 加入了群聊',
+  '{inviter} 邀请 {invited}、{other} 加入了群聊',
+  
+  // 场景3: 扫码入群
+  '{invited} 通过扫描 {inviter} 分享的二维码加入群聊',
+  '{invited} 通过扫描你分享的二维码加入群聊',
+  
+  // 场景4: 移出/修改
+  '{inviter} 将 {invited} 移出了群聊',
+  '{inviter} 修改群名为 “{groupName}”'
 ]
 
 // 微信真实风格昵称库

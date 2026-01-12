@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { useCorpusStore } from './corpus'
 import { localDB } from '../utils/localdb'
-import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_AVATARS } from '../config/presets'
+import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_AVATARS, PRESET_SYSTEMS } from '../config/presets'
 import defaultBg from '../assets/bg.jpg'
 
 export type MessageType = 'text' | 'system' | 'image'
@@ -37,14 +37,7 @@ export const useChatStore = defineStore('chat', {
     statusBarTime: '23:30',
     previewTheme: 'light' as PreviewTheme,
     currentUser: { name: '我', avatar: '' },
-    messages: [] as Message[],
-    systemTemplates: [
-      '{name}邀请{invited}加入了群聊',
-      '{invited}通过扫描{name}分享的二维码加入群聊',
-      '{invited}通过群成员{name}分享的二维码加入群聊',
-      '{name}邀请{invited}、{other}加入了群聊',
-      '{invited}加入了群聊'
-    ]
+    messages: [] as Message[]
   }),
   actions: {
     // --- Persistence ---
@@ -154,20 +147,21 @@ export const useChatStore = defineStore('chat', {
     },
     batchAddJoinMessages(count: number) {
       const corpusStore = useCorpusStore()
-      const templates = corpusStore.systems.length
-        ? corpusStore.systems.map(item => item.content)
-        : this.systemTemplates
+      // 获取语料库中的系统模板，如果没有则使用配置文件的预设
+      const storeTemplates = corpusStore.systems.map(item => item.content).filter(Boolean)
+      const templates = storeTemplates.length ? storeTemplates : PRESET_SYSTEMS
 
       for (let i = 0; i < count; i++) {
         const inviter = this.getRandomUser()
         const invited = this.getRandomUser()
         const other = this.getRandomUser()
-        const template = templates[Math.floor(Math.random() * templates.length)] || '"{name}"邀请"{invited}"加入了群聊'
+        const template = templates[Math.floor(Math.random() * templates.length)] || '{inviter} 邀请 {invited} 加入了群聊'
         
         const content = template
-          .replace('{name}', `<span class="system-name">${inviter.name}</span>`)
-          .replace('{invited}', `<span class="system-name">${invited.name}</span>`)
-          .replace('{other}', `<span class="system-name">${other.name}</span>`)
+          .replace(/{inviter}/g, `<span class="system-name">${inviter.name}</span>`)
+          .replace(/{invited}/g, `<span class="system-name">${invited.name}</span>`)
+          .replace(/{other}/g, `<span class="system-name">${other.name}</span>`)
+          .replace(/{groupName}/g, `<span class="system-name">${this.groupTitle}</span>`)
 
         this.messages.push({
           id: Math.random().toString(36).substr(2, 9),

@@ -125,4 +125,9 @@ const handlePaste = (e: ClipboardEvent) => {
   font-family: v-bind('chatStore.nicknameFont');
   font-weight: 500;
 }
+
+:deep(.system-link) {
+  color: #576b95;
+  cursor: pointer;
+}
 </style>

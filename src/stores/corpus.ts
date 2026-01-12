@@ -1,42 +1,31 @@
 import { defineStore } from 'pinia'
 import { db } from '../utils/cloudbase'
 import { localDB } from '../utils/localdb'
-import { PRESET_DIALOGUES, PRESET_SYSTEMS } from '../config/presets'
+import { PRESET_DIALOGUES } from '../config/presets'
 
 export interface CorpusItem {
   _id?: string
   id?: number
-  type: 'dialogue' | 'system'
+  type: 'dialogue'
   content: string
   preset?: boolean
 }
 
-type DialogueItem = CorpusItem & { type: 'dialogue' }
-type SystemItem = CorpusItem & { type: 'system' }
-
 const CLOUD_COLLECTION = 'corpus'
 
 const getPresets = () => {
-  const dialogues: DialogueItem[] = PRESET_DIALOGUES.map((content, index) => ({
-    id: -(index + 1), // Negative ID for presets
-    type: 'dialogue',
-    content,
-    preset: true
-  }))
-  const systems: SystemItem[] = PRESET_SYSTEMS.map((content, index) => ({
+  return PRESET_DIALOGUES.map((content, index) => ({
     id: -(index + 1),
-    type: 'system',
+    type: 'dialogue' as const,
     content,
     preset: true
   }))
-  return { dialogues, systems }
 }
 
 export const useCorpusStore = defineStore('corpus', {
   state: () => ({
     mode: 'local' as 'local' | 'cloud',
     dialogues: [] as CorpusItem[],
-    systems: [] as CorpusItem[],
     isReady: false
   }),
   
@@ -53,11 +42,10 @@ export const useCorpusStore = defineStore('corpus', {
     },
 
     async loadAll() {
-      const { dialogues, systems } = getPresets()
+      const presets = getPresets()
       
       // 1. 优先展示预设
-      this.dialogues = [...dialogues]
-      this.systems = [...systems]
+      this.dialogues = [...presets]
 
       let fetchedItems: CorpusItem[] = []
 
@@ -67,20 +55,16 @@ export const useCorpusStore = defineStore('corpus', {
         fetchedItems = await this.fetchCloud()
       }
 
-      const customDialogues = fetchedItems.filter(i => i.type === 'dialogue')
-      const customSystems = fetchedItems.filter(i => i.type === 'system')
-
-      // 2. 合并用户数据
-      this.dialogues = [...dialogues, ...customDialogues]
-      this.systems = [...systems, ...customSystems]
+      // 2. 合并用户自定义对话
+      this.dialogues = [...presets, ...fetchedItems]
     },
 
-    async addEntry(type: 'dialogue' | 'system', content: string) {
+    async addEntry(content: string) {
       if (!content.trim()) return
       if (this.mode === 'local') {
-        await this.addLocal(type, content)
+        await this.addLocal(content)
       } else {
-        await this.addCloud(type, content)
+        await this.addCloud(content)
       }
       await this.loadAll()
     },
@@ -105,26 +89,24 @@ export const useCorpusStore = defineStore('corpus', {
     },
 
     async exportAll() {
-      // 导出时包含所有可见数据（含预设）
       return {
-        dialogues: this.dialogues.map(i => i.content),
-        systems: this.systems.map(i => i.content)
+        dialogues: this.dialogues.map(i => i.content)
       }
     },
     
-    async replaceAll(dialogues: string[], systems: string[]) {
+    async replaceAll(dialogues: string[]) {
       await this.clearAll()
-      for (const t of dialogues) if(t.trim()) await this.addEntry('dialogue', t)
-      for (const t of systems) if(t.trim()) await this.addEntry('system', t)
+      for (const t of dialogues) if(t.trim()) await this.addEntry(t)
     },
 
     // --- Local Engine ---
     async fetchLocal(): Promise<CorpusItem[]> {
-      return (await localDB.getAll<CorpusItem>())
+      const all = await localDB.getAll<CorpusItem>()
+      return all.filter(i => i.type === 'dialogue')
     },
 
-    async addLocal(type: 'dialogue' | 'system', content: string) {
-      await localDB.add({ type, content, preset: false })
+    async addLocal(content: string) {
+      await localDB.add({ type: 'dialogue', content, preset: false })
     },
 
     async deleteLocal(id: number) {
@@ -138,7 +120,10 @@ export const useCorpusStore = defineStore('corpus', {
     // --- Cloud Engine ---
     async fetchCloud(): Promise<CorpusItem[]> {
       try {
-        const { data } = await db.collection(CLOUD_COLLECTION).limit(1000).get()
+        const { data } = await db.collection(CLOUD_COLLECTION)
+          .where({ type: 'dialogue' })
+          .limit(1000)
+          .get()
         return data as CorpusItem[]
       } catch (e) {
         console.error('Cloud fetch failed', e)
@@ -146,10 +131,10 @@ export const useCorpusStore = defineStore('corpus', {
       }
     },
 
-    async addCloud(type: 'dialogue' | 'system', content: string) {
+    async addCloud(content: string) {
       try {
         await db.collection(CLOUD_COLLECTION).add({
-          type,
+          type: 'dialogue',
           content,
           created_at: new Date()
         })
