@@ -7,8 +7,10 @@ import AndroidNavBar from './AndroidNavBar.vue'
 
 const chatStore = useChatStore()
 const screenRef = ref<HTMLElement | null>(null)
+const titleBarRef = ref<HTMLElement | null>(null)
 const scrollContainer = ref<HTMLElement | null>(null)
 const isDark = computed(() => chatStore.previewTheme === 'dark')
+const captureTop = ref(0)
 const captureHeight = ref(0)
 
 const backgroundStyle = computed(() => {
@@ -30,10 +32,13 @@ const updateCaptureHeight = () => {
   if (!element) return
   const width = element.clientWidth
   const height = element.clientHeight
+  const top = titleBarRef.value ? Math.max(0, titleBarRef.value.offsetTop + 6) : 0
+  const availableHeight = Math.max(0, height - top)
   const targetHeight = Math.round(width * 4 / 3)
+  captureTop.value = top
   captureHeight.value = chatStore.exportRatio === '3:4'
-    ? Math.min(targetHeight, height)
-    : height
+    ? Math.min(targetHeight, availableHeight)
+    : availableHeight
 }
 
 watch(() => chatStore.messages.length, () => {
@@ -84,8 +89,8 @@ onBeforeUnmount(() => {
     >
       <div
         v-if="chatStore.isHighlightingCapture"
-        class="absolute left-0 top-0 z-40 pointer-events-none"
-        :style="{ width: '100%', height: `${captureHeight}px` }"
+        class="absolute left-0 z-40 pointer-events-none"
+        :style="{ top: `${captureTop}px`, width: '100%', height: `${captureHeight}px` }"
       >
         <div class="absolute inset-0 border-2 border-[#7A9D8C] rounded-[inherit] bg-[#7A9D8C]/5"></div>
       </div>
@@ -124,6 +129,7 @@ onBeforeUnmount(() => {
           <!-- 微信标题栏 (核心还原点) -->
           <div
             id="wechat-titlebar"
+            ref="titleBarRef"
             class="flex items-center justify-between h-[48px] px-2"
             :class="isDark ? 'text-[#f5f5f5]' : 'text-[#181818]'"
           >

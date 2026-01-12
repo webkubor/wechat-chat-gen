@@ -9,7 +9,7 @@ const fetchVersion = async () => {
   try {
     const res = await fetch(`/version.json?t=${Date.now()}`)
     const data = await res.json()
-    version.value = data.version
+    version.value = data?.changelog?.[0]?.version ?? data?.version ?? __APP_VERSION__
   } catch (e) {
     // 降级使用编译时定义的版本
     version.value = __APP_VERSION__

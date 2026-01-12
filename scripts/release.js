@@ -9,12 +9,19 @@ const VERSION_FILE = path.join(ROOT_DIR, 'public/version.json')
 const PACKAGE_FILE = path.join(ROOT_DIR, 'package.json')
 const CHANGELOG_FILE = path.join(ROOT_DIR, 'CHANGELOG.md')
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
+const AUTO_FLAGS = new Set(['--auto', '-y', '--yes'])
+const isAuto = process.argv.some(arg => AUTO_FLAGS.has(arg))
+const rl = isAuto
+  ? null
+  : readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
 
-const question = (query) => new Promise((resolve) => rl.question(query, resolve))
+const question = (query) => new Promise((resolve) => {
+  if (!rl) return resolve('')
+  rl.question(query, resolve)
+})
 
 async function main() {
   // 1. 读取当前版本
@@ -27,26 +34,37 @@ async function main() {
     changelogContent = '# Changelog\n\nAll notable changes to this project will be documented in this file.\n'
   }
   
+  const latestVersion = versionData.changelog?.[0]?.version || versionData.version
+  const latestUpdatedAt = versionData.changelog?.[0]?.date
+
   console.log(`
-📦 当前版本: ${versionData.version}`)
-  console.log(`📅 最后更新: ${versionData.updatedAt}`)
+📦 当前版本: ${latestVersion}`)
+  if (latestUpdatedAt) console.log(`📅 最后更新: ${latestUpdatedAt}`)
   
   // 2. 询问新版本
-  const newVersion = await question(`
-请输入新版本号 (默认 ${incrementPatch(versionData.version)}): `) || incrementPatch(versionData.version)
+  const defaultVersion = incrementPatch(latestVersion)
+  const newVersion = isAuto
+    ? defaultVersion
+    : await question(`
+请输入新版本号 (默认 ${defaultVersion}): `) || defaultVersion
   
   // 3. 询问更新内容
-  console.log('\n📝 请输入更新内容 (输入空行结束):')
-  const features = []
-  while (true) {
-    const feature = await question(`- `)
-    if (!feature.trim()) break
-    features.push(feature.trim())
+  let features = []
+  if (isAuto) {
+    const envNotes = process.env.RELEASE_NOTES?.trim()
+    features = envNotes ? envNotes.split('|').map(item => item.trim()).filter(Boolean) : ['例行更新']
+  } else {
+    console.log('\n📝 请输入更新内容 (输入空行结束):')
+    while (true) {
+      const feature = await question(`- `)
+      if (!feature.trim()) break
+      features.push(feature.trim())
+    }
   }
   
   if (features.length === 0) {
     console.log('❌ 更新内容不能为空')
-    rl.close()
+    rl?.close()
     return
   }
 
@@ -60,8 +78,6 @@ async function main() {
     features
   }
   
-  versionData.version = newVersion
-  versionData.updatedAt = today
   versionData.changelog.unshift(newLog) // 新日志放最前
   
   // 更新 package.json
@@ -88,12 +104,17 @@ async function main() {
   console.log(`
 ✅ 版本更新成功! v${newVersion}`)
   console.log(`文件已更新: public/version.json, package.json, CHANGELOG.md`)
+  console.log(`
+🧾 最新日志:
+- v${newLog.version} (${newLog.date})
+${newLog.features.map(f => `  - ${f}`).join('\n')}`)
   
-  rl.close()
+  rl?.close()
 }
 
 function incrementPatch(version) {
-  const parts = version.split('.').map(Number)
+  const safeVersion = version || '0.0.0'
+  const parts = safeVersion.split('.').map(Number)
   parts[2]++
   return parts.join('.')
 }

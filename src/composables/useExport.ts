@@ -18,6 +18,7 @@ export function useExport() {
   const isDownloading = ref(false)
   const exportIndex = ref(0)
   const queue = ref<QueueItem[]>([])
+  const isQueueing = ref(false)
 
   const restoreQueue = async () => {
     try {
@@ -49,6 +50,7 @@ export function useExport() {
 
   const capturePreviewBlob = async () => {
     const element = document.getElementById('wechat-screen')
+    const header = document.getElementById('wechat-titlebar')
     if (!element) {
       window.$message.error('未找到截图区域，无法导出')
       return null
@@ -64,12 +66,13 @@ export function useExport() {
 
       const scale = fullCanvas.width / element.offsetWidth
       const cropWidth = element.offsetWidth
-      const cropTop = 0
+      const cropTop = header ? Math.max(0, header.offsetTop + 6) : 0
       const fullHeight = element.offsetHeight
+      const availableHeight = Math.max(0, fullHeight - cropTop)
       const targetHeight = Math.round(cropWidth * 4 / 3)
       const exportHeight = chatStore.exportRatio === '3:4'
-        ? Math.min(targetHeight, fullHeight)
-        : fullHeight
+        ? Math.min(targetHeight, availableHeight)
+        : availableHeight
 
       const cropCanvas = document.createElement('canvas')
       cropCanvas.width = Math.round(cropWidth * scale)
@@ -110,9 +113,12 @@ export function useExport() {
   }
 
   const addToQueue = async () => {
+    if (isQueueing.value) return
+    isQueueing.value = true
     const blob = await capturePreviewBlob()
     if (!blob) {
       window.$message.error('加入队列失败，请重试')
+      isQueueing.value = false
       return
     }
     const id = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -125,6 +131,7 @@ export function useExport() {
       window.$message.error('队列持久化失败，刷新后会丢失')
     }
     window.$message.success('已加入待下载队列')
+    isQueueing.value = false
   }
 
   const removeFromQueue = (id: string) => {
@@ -182,6 +189,7 @@ export function useExport() {
     isDownloading,
     exportIndex,
     queue,
+    isQueueing,
     handleQuickDownload,
     addToQueue,
     removeFromQueue,

@@ -7,6 +7,9 @@ const hasUpdate = ref(false)
 const newVersion = ref('')
 const isDismissed = ref(false) // 是否手动忽略了本次更新
 
+const getLatestVersion = (data: any) =>
+  data?.changelog?.[0]?.version ?? data?.version ?? __APP_VERSION__
+
 /**
  * 语义化版本比对: v1 > v2 返回 1, v1 < v2 返回 -1, 相等返回 0
  */
@@ -30,11 +33,12 @@ const checkUpdate = async () => {
     // 添加时间戳防止缓存
     const res = await fetch(`/version.json?t=${Date.now()}`)
     const data = await res.json()
+    const latestVersion = getLatestVersion(data)
     
     // 只有当服务器版本号 > 当前运行时版本号时，才触发更新提示
-    if (compareVersions(data.version, __APP_VERSION__) === 1) {
+    if (compareVersions(latestVersion, __APP_VERSION__) === 1) {
       hasUpdate.value = true
-      newVersion.value = data.version
+      newVersion.value = latestVersion
     }
   } catch (e) {
     console.error('Check update failed', e)

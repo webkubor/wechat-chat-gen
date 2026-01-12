@@ -34,7 +34,11 @@ const handleAvatarUpload = (e: Event) => {
          <div class="w-1 h-4 bg-[#A27B5C] rounded-full"></div>
          <h3 class="text-sm font-medium text-white/80 tracking-wide">高级设置</h3>
       </div>
-      <span class="text-xs text-white/40 group-open:rotate-180 transition-transform">▼</span>
+      <span class="w-7 h-7 rounded-full border border-white/10 bg-white/5 text-white/50 flex items-center justify-center transition-all group-open:rotate-180 group-open:text-white/70">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </span>
     </summary>
 
     <div class="grid grid-cols-2 gap-4">

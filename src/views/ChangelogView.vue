@@ -9,8 +9,7 @@ interface LogItem {
 }
 
 interface VersionData {
-  version: string
-  updatedAt: string
+  version?: string
   changelog: LogItem[]
 }
 
@@ -23,7 +22,7 @@ onMounted(async () => {
     const res = await fetch('/version.json')
     const data: VersionData = await res.json()
     logs.value = data.changelog
-    currentVersion.value = data.version
+    currentVersion.value = data?.changelog?.[0]?.version ?? data?.version ?? ''
   } catch (e) {
     console.error('Failed to load changelog', e)
   }
