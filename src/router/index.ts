@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import GeneratorView from '../views/GeneratorView.vue'
 import CorpusView from '../views/CorpusView.vue'
+import ChangelogView from '../views/ChangelogView.vue'
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
@@ -14,6 +15,10 @@ const router = createRouter({
       path: '/corpus',
       name: 'corpus',
       component: CorpusView
+    },
+    {n      path: '/changelog',
+      name: 'changelog',
+      component: ChangelogView
     }
   ]
 })

@@ -1,11 +1,65 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import MusicPlayer from './components/MusicPlayer.vue'
+
+const hasUpdate = ref(false)
+const newVersion = ref('')
+
+const checkUpdate = async () => {
+  try {
+    // 添加时间戳防止缓存
+    const res = await fetch(`/version.json?t=${Date.now()}`)
+    const data = await res.json()
+    // 简单对比：如果不相等则认为有更新
+    if (data.version !== __APP_VERSION__) {
+      hasUpdate.value = true
+      newVersion.value = data.version
+    }
+  } catch (e) {
+    console.error('Check update failed', e)
+  }
+}
+
+const handleRefresh = () => {
+  window.location.reload()
+}
+
+onMounted(() => {
+  // 初始检查
+  checkUpdate()
+  
+  // 每隔 10 分钟检查一次
+  setInterval(checkUpdate, 10 * 60 * 1000)
+  
+  // 页面重新获得焦点时检查
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      checkUpdate()
+    }
+  })
+})
 </script>
 
 <template>
   <div class="min-h-screen w-full font-sans text-slate-200 overflow-x-hidden relative selection:bg-[#7A9D8C] selection:text-white">
     
     <MusicPlayer />
+
+    <!-- Update Notification -->
+    <transition name="slide-up">
+      <div v-if="hasUpdate" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-[#2C3639]/90 border border-[#7A9D8C]/30 backdrop-blur-md pl-5 pr-2 py-2 rounded-full shadow-2xl flex items-center gap-4 max-w-[90vw]">
+        <div class="flex flex-col">
+          <span class="text-xs text-[#7A9D8C] font-bold uppercase tracking-wider">New Version Available</span>
+          <span class="text-xs text-white/80">v{{ newVersion }} 已发布，包含新功能与修复</span>
+        </div>
+        <button 
+          @click="handleRefresh"
+          class="bg-[#7A9D8C] hover:bg-[#6B8E78] text-white text-xs font-bold px-4 py-2 rounded-full transition-colors active:scale-95"
+        >
+          立即刷新
+        </button>
+      </div>
+    </transition>
 
     <!-- Liquid Background -->
     <div class="fixed inset-0 z-0">
@@ -75,5 +129,17 @@ body {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Slide Up Transition */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 20px);
 }
 </style>

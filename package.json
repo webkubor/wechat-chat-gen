@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "node scripts/release.js"
   },
   "dependencies": {
-    "html2canvas": "^1.4.1",
+    "html-to-image": "^1.11.13",
     "jszip": "^3.10.1",
     "pinia": "^3.0.4",
     "vue": "^3.5.24",

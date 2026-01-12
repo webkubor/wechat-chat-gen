@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-01-12",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-01-12",
+      "features": [
+        "新增全局 Toast 提示系统，优化交互体验",
+        "重构导出功能，使用 html-to-image 解决白屏问题",
+        "新增快捷导出 PNG 和批量 ZIP 下载功能"
+      ]
+    }
+  ]
+}
