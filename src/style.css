@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+html, body {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+button, a, .cursor-pointer {
+  touch-action: manipulation;
+}

@@ -14,6 +14,25 @@ const showInstallGuide = ref(false)
 const isIOS = ref(false)
 const isStandalone = ref(false)
 
+const STORAGE_KEY = 'pwa_prompt_dismissed'
+
+/**
+ * 检查是否应该显示引导
+ */
+const shouldShowGuide = () => {
+  const dismissedTime = localStorage.getItem(STORAGE_KEY)
+  if (!dismissedTime) return true
+  
+  // 24小时内不重复提示
+  const hoursElapsed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60)
+  return hoursElapsed > 24
+}
+
+const dismissGuide = () => {
+  showInstallGuide.value = false
+  localStorage.setItem(STORAGE_KEY, Date.now().toString())
+}
+
 /**
  * 初始化环境检测
  */
@@ -28,14 +47,14 @@ onMounted(() => {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault()
     deferredPrompt.value = e
-    // 如果不是在独立模式下，显示引导
-    if (!isStandalone.value) {
+    // 如果不是在独立模式下，且没有被手动关闭，显示引导
+    if (!isStandalone.value && shouldShowGuide()) {
       showInstallGuide.value = true
     }
   })
 
-  // 4. 如果是 iOS 且未安装，延迟 3 秒提示（避免打扰初次访问）
-  if (isIOS.value && !isStandalone.value) {
+  // 4. 如果是 iOS 且未安装且未关闭，延迟 3 秒提示
+  if (isIOS.value && !isStandalone.value && shouldShowGuide()) {
     setTimeout(() => {
       showInstallGuide.value = true
     }, 3000)
@@ -110,7 +129,7 @@ const handleUpdate = async () => {
         <button @click="handleInstall" class="bg-[#7A9D8C] text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all">
           安装
         </button>
-        <button @click="showInstallGuide = false" class="absolute -top-2 -right-2 w-6 h-6 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center text-[10px]">✕</button>
+        <button @click="dismissGuide" class="absolute -top-3 -right-3 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center text-[12px] shadow-lg border border-white/10 active:scale-90 transition-all">✕</button>
       </div>
     </transition>
 
@@ -125,7 +144,7 @@ const handleUpdate = async () => {
           点击下方的 <span class="bg-white/10 px-1.5 py-0.5 rounded mx-0.5 text-white/80">分享</span> 图标<br/>
           然后选择 <span class="bg-white/10 px-1.5 py-0.5 rounded mx-0.5 text-white/80">添加到主屏幕</span>
         </p>
-        <button @click="showInstallGuide = false" class="text-[10px] uppercase tracking-widest text-white/30 font-bold hover:text-white transition-colors">我知道了</button>
+        <button @click="dismissGuide" class="w-full py-3 bg-[#7A9D8C]/20 hover:bg-[#7A9D8C]/30 text-[#7A9D8C] rounded-2xl text-[12px] font-bold tracking-widest active:scale-95 transition-all">我知道了</button>
         
         <!-- 小箭头指向下方分享按钮 (示意) -->
         <div class="mt-4 animate-bounce text-[#7A9D8C]">

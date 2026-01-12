@@ -51,16 +51,17 @@ onMounted(() => {
 
     <!-- Update Notification -->
     <transition name="slide-up">
-      <div v-if="hasUpdate" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-[#2C3639]/90 border border-[#7A9D8C]/30 backdrop-blur-md pl-5 pr-2 py-2 rounded-full shadow-2xl flex items-center gap-4 max-w-[90vw]">
-        <div class="flex flex-col">
-          <span class="text-xs text-[#7A9D8C] font-bold uppercase tracking-wider">New Version Available</span>
-          <span class="text-xs text-white/80">v{{ newVersion }} 已发布，包含新功能与修复</span>
+      <div v-if="hasUpdate" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-[#2C3639]/95 border border-[#7A9D8C]/40 backdrop-blur-xl p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-center gap-4 w-[90vw] sm:w-auto min-w-[300px]">
+        <div class="flex-1 text-center sm:text-left">
+          <span class="text-[10px] text-[#7A9D8C] font-black uppercase tracking-[0.2em]">New Update</span>
+          <p class="text-sm text-white/90 font-medium leading-tight mt-0.5">v{{ newVersion }} 已经发布</p>
+          <p class="text-[11px] text-white/40 mt-1">包含交互优化与系统稳定性提升</p>
         </div>
         <button 
           @click="handleRefresh"
-          class="bg-[#7A9D8C] hover:bg-[#6B8E78] text-white text-xs font-bold px-4 py-2 rounded-full transition-colors active:scale-95"
+          class="w-full sm:w-auto bg-[#7A9D8C] hover:bg-[#6B8E78] text-white text-xs font-bold px-6 py-2.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-[#7A9D8C]/20"
         >
-          立即刷新
+          立即更新
         </button>
       </div>
     </transition>
