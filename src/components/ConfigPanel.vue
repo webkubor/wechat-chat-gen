@@ -3,6 +3,7 @@ import { ref, onMounted, watch, nextTick } from 'vue'
 import { useChatStore } from '../stores/chat'
 import { useCorpusStore } from '../stores/corpus'
 import { toBlob, toCanvas } from 'html-to-image'
+import BaseSelect from './ui/BaseSelect.vue'
 import JSZip from 'jszip'
 
 const chatStore = useChatStore()
@@ -17,6 +18,30 @@ const toastType = ref<'success' | 'error'>('success')
 const version = __APP_VERSION__
 let toastTimer: number | null = null
 
+// Option Constants
+const themeOptions = [
+  { label: '浅色', value: 'light' },
+  { label: '深色', value: 'dark' }
+]
+
+const deviceOptions = [
+  { label: 'iOS 风格', value: 'ios' },
+  { label: 'Android 风格', value: 'android' }
+]
+
+const fontOptions = [
+  { label: '默认无衬线', value: 'sans-serif' },
+  { label: '苹方 (Mac/iOS)', value: "'PingFang SC', sans-serif" },
+  { label: '微软雅黑 (Win)', value: "'Microsoft YaHei', sans-serif" },
+  { label: '衬线体 (优雅)', value: 'serif' },
+  { label: '等宽体 (极客)', value: 'monospace' }
+]
+
+const statusBarThemeOptions = [
+  { label: '黑色图标', value: 'dark' },
+  { label: '白色图标', value: 'light' }
+]
+
 const showToast = (message: string, type: 'success' | 'error' = 'success') => {
   toastMessage.value = message
   toastType.value = type
@@ -28,11 +53,9 @@ const showToast = (message: string, type: 'success' | 'error' = 'success') => {
 
 onMounted(async () => {
   await corpusStore.initDB()
-  // 初始进入自动生成20条对话，避免空白
   chatStore.batchAddRandomDialog(20)
 })
 
-// 监听模式切换，自动刷新预览内容
 watch(currentMode, (newMode) => {
   chatStore.clearMessages()
   if (newMode === 'join') {
@@ -84,7 +107,6 @@ const triggerDownload = (name: string, blob: Blob) => {
   link.style.display = 'none'
   document.body.appendChild(link)
   link.click()
-  // 延时释放，确保浏览器已捕获下载请求
   setTimeout(() => {
     link.remove()
     URL.revokeObjectURL(link.href)
@@ -135,7 +157,6 @@ const renderImageBlob = async (index: number) => {
     const cropWidth = element.offsetWidth
     const exportHeight = cropHeight > 0 ? cropHeight : element.offsetHeight
 
-    // 1. 生成全图 Canvas
     const fullCanvas = await toCanvas(element, {
       cacheBust: true,
       backgroundColor: '#ededed',
@@ -143,20 +164,13 @@ const renderImageBlob = async (index: number) => {
       skipAutoScale: true
     })
 
-    // 2. 创建裁切 Canvas
     const cropCanvas = document.createElement('canvas')
-    cropCanvas.width = cropWidth * 2 // 适配 pixelRatio: 2
+    cropCanvas.width = cropWidth * 2
     cropCanvas.height = exportHeight * 2
     const ctx = cropCanvas.getContext('2d')
 
-    if (!ctx) {
-      throw new Error('Canvas Context 创建失败')
-    }
+    if (!ctx) throw new Error('Canvas Context 创建失败')
 
-    // 3. 绘制裁切区域
-    // source: fullCanvas (已经是 2x 大小)
-    // source rect: x=0, y=cropTop*2, w=cropWidth*2, h=exportHeight*2
-    // dest rect: x=0, y=0, w=cropWidth*2, h=exportHeight*2
     ctx.drawImage(
       fullCanvas,
       0, cropTop * 2, cropWidth * 2, exportHeight * 2,
@@ -192,19 +206,11 @@ const handleBatchDownload = async () => {
     const zip = new JSZip()
     for (let i = 0; i < downloadCount.value; i++) {
       exportIndex.value = i + 1
-      // 1. 生成新内容
       handleGenerate()
-      
-      // 2. 等待 DOM 更新和头像图片加载
       await nextTick()
-      // 增加延时确保图片加载完成
       await new Promise(resolve => setTimeout(resolve, 800)) 
-      
-      // 3. 截图下载
       const image = await renderImageBlob(i)
-      if (image?.blob) {
-        zip.file(image.name, image.blob)
-      }
+      if (image?.blob) zip.file(image.name, image.blob)
     }
 
     const zipBlob = await zip.generateAsync({ type: 'blob' })
@@ -275,8 +281,6 @@ const handleBatchDownload = async () => {
             >
               拉人模式
             </button>
-            
-            <!-- Animated Background Pill -->
             <div 
               class="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#7A9D8C] rounded-xl transition-all duration-500 ease-spring"
               :class="currentMode === 'chat' ? 'left-1.5' : 'left-[calc(50%+3px)]'"
@@ -285,16 +289,12 @@ const handleBatchDownload = async () => {
         </div>
         <div class="group">
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">预览主题</label>
-          <div class="relative">
-            <select v-model="chatStore.previewTheme" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white focus:outline-none transition-all cursor-pointer">
-              <option value="light" class="text-gray-900">浅色</option>
-              <option value="dark" class="text-gray-900">深色</option>
-            </select>
-            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
-          </div>
+          <BaseSelect 
+            v-model="chatStore.previewTheme" 
+            :options="themeOptions" 
+          />
         </div>
       </div>
-
     </div>
 
     <!-- Section: Advanced (Collapsed) -->
@@ -310,13 +310,10 @@ const handleBatchDownload = async () => {
       <div class="grid grid-cols-3 gap-4">
         <div class="group">
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2 group-focus-within:text-[#7A9D8C] transition-colors">系统样式</label>
-          <div class="relative">
-            <select v-model="chatStore.deviceType" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-4 focus:ring-[#7A9D8C]/10 transition-all duration-300 cursor-pointer">
-              <option value="ios" class="text-gray-900">iOS 风格</option>
-              <option value="android" class="text-gray-900">Android 风格</option>
-            </select>
-            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
-          </div>
+          <BaseSelect 
+            v-model="chatStore.deviceType" 
+            :options="deviceOptions" 
+          />
         </div>
         <div>
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">聊天背景</label>
@@ -363,16 +360,10 @@ const handleBatchDownload = async () => {
         </div>
         <div class="group">
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">昵称字体</label>
-          <div class="relative">
-            <select v-model="chatStore.nicknameFont" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white focus:outline-none transition-all cursor-pointer">
-              <option value="sans-serif" class="text-gray-900">默认无衬线</option>
-              <option value="'PingFang SC', sans-serif" class="text-gray-900">苹方 (Mac/iOS)</option>
-              <option value="'Microsoft YaHei', sans-serif" class="text-gray-900">微软雅黑 (Win)</option>
-              <option value="serif" class="text-gray-900">衬线体 (优雅)</option>
-              <option value="monospace" class="text-gray-900">等宽体 (极客)</option>
-            </select>
-            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
-          </div>
+          <BaseSelect 
+            v-model="chatStore.nicknameFont" 
+            :options="fontOptions" 
+          />
         </div>
       </div>
 
@@ -389,13 +380,10 @@ const handleBatchDownload = async () => {
         </div>
         <div class="group">
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">顶部主题</label>
-          <div class="relative">
-            <select v-model="chatStore.statusBarTheme" class="w-full appearance-none bg-white/5 hover:bg-white/10 border border-transparent focus:border-[#7A9D8C]/50 rounded-xl px-4 py-3 text-[10px] text-white focus:outline-none transition-all cursor-pointer">
-              <option value="dark" class="text-gray-900">黑色图标</option>
-              <option value="light" class="text-gray-900">白色图标</option>
-            </select>
-            <div class="absolute right-4 top-4 pointer-events-none text-white/30 text-[10px]">▼</div>
-          </div>
+          <BaseSelect 
+            v-model="chatStore.statusBarTheme" 
+            :options="statusBarThemeOptions" 
+          />
         </div>
       </div>
 
@@ -510,12 +498,17 @@ const handleBatchDownload = async () => {
           (浏览器可能会拦截多文件下载，请注意允许)
         </p>
       </div>
+      
+       <!-- Footer -->
+        <footer class="mt-12 pt-8 border-t border-white/5 text-center">
+          <p class="text-xs text-white/30 mb-1">Feedback & Support</p>
+          <a href="mailto:webkubor@163.com" class="text-sm font-medium text-[#7A9D8C] hover:text-[#A27B5C] transition-colors tracking-wide">webkubor@163.com</a>
+          <p class="text-[10px] text-white/35 mt-3 tracking-widest">好易美票务公司</p>
           <p class="text-[9px] text-white/20 mt-3 tracking-[0.2em] uppercase">
             © 2026 Design by WebKubor · 
             <router-link to="/changelog" class="hover:text-white/40 transition-colors">v{{ version }}</router-link>
           </p>
         </footer>
-      </div>
     </div>
   </div>
 </template>

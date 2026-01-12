@@ -16,7 +16,8 @@ const router = createRouter({
       name: 'corpus',
       component: CorpusView
     },
-    {n      path: '/changelog',
+    {
+      path: '/changelog',
       name: 'changelog',
       component: ChangelogView
     }
