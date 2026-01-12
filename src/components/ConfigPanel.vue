@@ -69,8 +69,5 @@ const handleGenerate = () => {
       @clear-queue="clearQueue"
       @batch-download="handleBatchDownload"
     />
-
-    <!-- 4. 页脚信息模块 -->
-    <ConfigFooter />
   </div>
 </template>
