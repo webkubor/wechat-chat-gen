@@ -9,12 +9,15 @@ if (!envId) {
 }
 
 // 初始化 CloudBase
-export const tcb = cloudbase.init({
+const cloudbaseConfig: { env: string; region: string; proxyUrl?: string } = {
   env: envId || 'placeholder',
-  region: region || 'ap-shanghai',
-  // 开发模式下使用 Vite 代理
-  proxyUrl: import.meta.env.DEV ? '/tcb-api' : undefined
-})
+  region: region || 'ap-shanghai'
+}
+
+// 开发模式下使用 Vite 代理
+if (import.meta.env.DEV) cloudbaseConfig.proxyUrl = '/tcb-api'
+
+export const tcb = cloudbase.init(cloudbaseConfig as any)
 
 // 登录初始化状态记录
 let loginPromise: Promise<void> | null = null
