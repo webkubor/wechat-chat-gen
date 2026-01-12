@@ -116,13 +116,16 @@ watch(() => chatStore.messages.length, () => {
           >
             <div class="flex items-center gap-3 h-[36px]">
               <!-- 语音图标 -->
-              <InputBarIcons />
+              <InputBarIcons type="voice" />
 
               <!-- 输入框占位 -->
               <div
                 class="flex-1 h-[36px] rounded-[4px] border transition-all duration-300"
                 :class="isDark ? 'bg-[#2c2c2e] border-transparent' : 'bg-white border-black/[0.03]'"
               ></div>
+
+              <InputBarIcons type="emoji" />
+              <InputBarIcons type="plus" />
             </div>
           </div>
         </div>

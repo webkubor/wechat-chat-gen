@@ -14,8 +14,8 @@ export const useChatStore = defineStore('chat', {
     nicknameColor: '#adadad',
     nicknameSize: 11,
     nicknameFont: 'sans-serif',
-    systemBgColor: 'rgba(255, 255, 255, 0.15)',
-    systemNameColor: '#7d90a9',
+    systemBgColor: 'rgba(245, 245, 245, 0.9)',
+    systemNameColor: '#6b7b95',
     isHighlightingCapture: false,
     backgroundImage: defaultBg, // 这里保持引用链接，只有用户上传的存 Blob
     deviceType: 'ios' as DeviceType,
