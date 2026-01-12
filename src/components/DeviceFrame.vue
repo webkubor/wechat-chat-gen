@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from 'vue'
 import { useChatStore } from '../stores/chat'
+import StatusBarIcons from './StatusBarIcons.vue'
+import InputBarIcons from './InputBarIcons.vue'
+import AndroidNavBar from './AndroidNavBar.vue'
 
 const chatStore = useChatStore()
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -79,26 +82,7 @@ watch(() => chatStore.messages.length, () => {
             </div>
             
             <!-- 右侧: 图标 -->
-            <div class="flex items-center gap-1.5 h-[12px]">
-              <!-- 信号格 (微信风格) -->
-              <svg width="18" height="10" viewBox="0 0 18 10" fill="currentColor" :class="chatStore.statusBarTheme === 'light' ? 'text-white' : 'text-black'">
-                <rect x="0" y="7" width="3" height="3" rx="0.5" />
-                <rect x="4.5" y="5" width="3" height="5" rx="0.5" />
-                <rect x="9" y="2.5" width="3" height="7.5" rx="0.5" />
-                <rect x="13.5" y="0" width="3" height="10" rx="0.5" />
-              </svg>
-              <!-- WiFi -->
-              <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" :class="chatStore.statusBarTheme === 'light' ? 'text-white' : 'text-black'">
-                <path d="M8 12a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                <path d="M13.2 6.8a7.4 7.4 0 00-10.4 0 .6.6 0 11-.8-.9 8.6 8.6 0 0112 0 .6.6 0 11-.8.9z" opacity="0.9"/>
-                <path d="M15.5 4.3a10.6 10.6 0 00-15 0 .6.6 0 11-.8-.8 11.8 11.8 0 0116.6 0 .6.6 0 11-.8.8z" opacity="0.4"/>
-              </svg>
-              <!-- 电池 (iOS 标准样式) -->
-              <div class="relative w-[22px] h-[10px] rounded-[2.5px] border transition-colors" :class="chatStore.statusBarTheme === 'light' ? 'border-white/40' : 'border-black/30'">
-                <div class="absolute inset-[1px] rounded-[1px] bg-current" :style="{ width: '70%' }"></div>
-                <div class="absolute -right-[3px] top-[2.5px] w-[1.5px] h-[4px] rounded-r-full bg-current opacity-40"></div>
-              </div>
-            </div>
+            <StatusBarIcons />
           </div>
 
           <!-- 微信标题栏 (核心还原点) -->
@@ -143,31 +127,13 @@ watch(() => chatStore.messages.length, () => {
           >
             <div class="flex items-center gap-3 h-[36px]">
               <!-- 语音图标 -->
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" :class="isDark ? 'text-white/80' : 'text-[#181818]'">
-                <path d="M12 4a3 3 0 00-3 3v6a3 3 0 006 0V7a3 3 0 00-3-3z"/>
-                <path d="M19 10v1a7 7 0 01-14 0v-1"/>
-                <path d="M12 18v3M8 21h8" stroke-linecap="round"/>
-              </svg>
-              
+              <InputBarIcons />
+
               <!-- 输入框占位 -->
               <div
                 class="flex-1 h-[36px] rounded-[4px] border transition-all duration-300"
                 :class="isDark ? 'bg-[#2c2c2e] border-transparent' : 'bg-white border-black/[0.03]'"
               ></div>
-              
-              <!-- 表情图标 -->
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" :class="isDark ? 'text-white/80' : 'text-[#181818]'">
-                <circle cx="12" cy="12" r="9"/>
-                <path d="M8 13.5c1.5 2.5 6.5 2.5 8 0" stroke-linecap="round"/>
-                <circle cx="9" cy="10" r="1" fill="currentColor"/>
-                <circle cx="15" cy="10" r="1" fill="currentColor"/>
-              </svg>
-              
-              <!-- 加号图标 -->
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" :class="isDark ? 'text-white/80' : 'text-[#181818]'">
-                <circle cx="12" cy="12" r="9"/>
-                <path d="M12 8v8M8 12h8" stroke-linecap="round"/>
-              </svg>
             </div>
           </div>
         </div>
@@ -180,11 +146,7 @@ watch(() => chatStore.messages.length, () => {
         ></div>
 
         <!-- Android 导航栏 (极简风格) -->
-        <div v-if="chatStore.deviceType === 'android'" class="h-12 flex items-center justify-around z-30 opacity-40" :class="isDark ? 'text-white' : 'text-black'">
-          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M17.5 18.5l-6-6 6-6"/></svg>
-          <svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-          <svg width="16" height="16" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </div>
+        <AndroidNavBar v-if="chatStore.deviceType === 'android'" />
       </div>
     </div>
   </div>
