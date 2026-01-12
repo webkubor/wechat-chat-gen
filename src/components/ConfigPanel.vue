@@ -52,7 +52,8 @@ const showToast = (message: string, type: 'success' | 'error' = 'success') => {
 }
 
 onMounted(async () => {
-  await corpusStore.initDB()
+  await corpusStore.init()
+  // 初始进入自动生成20条对话，避免空白
   chatStore.batchAddRandomDialog(20)
 })
 

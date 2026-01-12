@@ -10,6 +10,7 @@
     "release": "node scripts/release.js"
   },
   "dependencies": {
+    "@cloudbase/js-sdk": "^2.24.7",
     "html-to-image": "^1.11.13",
     "jszip": "^3.10.1",
     "pinia": "^3.0.4",
