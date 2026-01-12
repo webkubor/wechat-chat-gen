@@ -1,5 +1,5 @@
 import { ref, onBeforeUnmount } from 'vue'
-import { toBlob } from 'html-to-image'
+import { toCanvas } from 'html-to-image'
 import JSZip from 'jszip'
 import { localDB } from '../utils/localdb'
 
@@ -47,17 +47,48 @@ export function useExport() {
 
   const capturePreviewBlob = async () => {
     const element = document.getElementById('wechat-screen')
-    if (!element) {
-      window.$message.error('未找到预览区域，无法导出')
+    const header = document.getElementById('wechat-titlebar')
+    const inputBar = document.getElementById('wechat-input-bar')
+    if (!element || !header || !inputBar) {
+      window.$message.error('未找到截图区域，无法导出')
       return null
     }
 
     try {
-      return await toBlob(element, {
+      const fullCanvas = await toCanvas(element, {
         cacheBust: true,
         backgroundColor: '#ededed',
         pixelRatio: 2,
         skipAutoScale: true
+      })
+
+      const scale = fullCanvas.width / element.offsetWidth
+      const cropTop = Math.max(0, header.offsetTop)
+      const cropBottom = Math.max(0, inputBar.offsetTop)
+      const cropHeight = Math.max(0, cropBottom - cropTop)
+      const cropWidth = element.offsetWidth
+      const exportHeight = cropHeight > 0 ? cropHeight : element.offsetHeight
+
+      const cropCanvas = document.createElement('canvas')
+      cropCanvas.width = Math.round(cropWidth * scale)
+      cropCanvas.height = Math.round(exportHeight * scale)
+      const ctx = cropCanvas.getContext('2d')
+      if (!ctx) throw new Error('Canvas Context 创建失败')
+
+      ctx.drawImage(
+        fullCanvas,
+        0,
+        cropTop * scale,
+        cropWidth * scale,
+        exportHeight * scale,
+        0,
+        0,
+        cropWidth * scale,
+        exportHeight * scale
+      )
+
+      return await new Promise<Blob | null>((resolve) => {
+        cropCanvas.toBlob((blob) => resolve(blob), 'image/png')
       })
     } catch (err) {
       console.error('渲染失败:', err)
