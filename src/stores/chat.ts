@@ -146,10 +146,7 @@ export const useChatStore = defineStore('chat', {
       this.save()
     },
     batchAddJoinMessages(count: number) {
-      const corpusStore = useCorpusStore()
-      // 获取语料库中的系统模板，如果没有则使用配置文件的预设
-      const storeTemplates = corpusStore.systems.map(item => item.content).filter(Boolean)
-      const templates = storeTemplates.length ? storeTemplates : PRESET_SYSTEMS
+      const templates = PRESET_SYSTEMS
 
       for (let i = 0; i < count; i++) {
         const inviter = this.getRandomUser()
