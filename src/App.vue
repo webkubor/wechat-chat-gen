@@ -44,7 +44,9 @@ onMounted(() => {
 <template>
   <div class="min-h-screen w-full font-sans text-slate-200 overflow-x-hidden relative selection:bg-[#7A9D8C] selection:text-white">
     
-    <MusicPlayer />
+    <div class="hidden md:block">
+      <MusicPlayer />
+    </div>
     <PWAPrompt />
 
     <!-- Update Notification -->
