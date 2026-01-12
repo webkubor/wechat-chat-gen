@@ -10,25 +10,14 @@ export const PRESET_DIALOGUES = [
 ]
 
 // 真实微信系统文案模板
-// 变量说明:
-// {inviter} - 邀请人
-// {invited} - 被邀请人
-// {link:撤销} - 蓝色可点击链接
 export const PRESET_SYSTEMS = [
-  // 场景1: “我”邀请他人
   '你邀请 {invited} 加入了群聊  <span class="system-link">撤销</span>',
   '你邀请 {invited}、{other} 加入了群聊  <span class="system-link">撤销</span>',
   '你邀请 {invited}、{other} 等 5 人加入了群聊  <span class="system-link">撤销</span>',
-  
-  // 场景2: 他人邀请
   '{inviter} 邀请 {invited} 加入了群聊',
   '{inviter} 邀请 {invited}、{other} 加入了群聊',
-  
-  // 场景3: 扫码入群
   '{invited} 通过扫描 {inviter} 分享的二维码加入群聊',
   '{invited} 通过扫描你分享的二维码加入群聊',
-  
-  // 场景4: 移出/修改
   '{inviter} 将 {invited} 移出了群聊',
   '{inviter} 修改群名为 “{groupName}”'
 ]
@@ -58,4 +47,18 @@ export const PRESET_AVATARS = [
   'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=100&h=100&fit=crop',
   'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=100&h=100&fit=crop',
   'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=100&h=100&fit=crop'
+]
+
+// 温暖语录库
+export const PRESET_QUOTES = [
+  "每一个普通的日子，都值得被认真记录。",
+  "在这个喧嚣的世界，总有一些温柔在角落悄悄生长。",
+  "所谓浪漫，就是从平淡生活里打捞星星。",
+  "慢慢来，好戏都在烟火里。",
+  "与其向往，不如出发。",
+  "心之所向，便是阳光。",
+  "保持热爱，奔赴山海。",
+  "愿你眼里有光，心中有爱。",
+  "生活虽平淡，但也要活得热气腾腾。",
+  "那些看似不起眼的日复一日，会在某天让你看到坚持的意义。"
 ]

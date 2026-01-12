@@ -4,6 +4,7 @@ import { useChatStore } from '../stores/chat'
 import { useCorpusStore } from '../stores/corpus'
 import { toBlob, toCanvas } from 'html-to-image'
 import BaseSelect from './ui/BaseSelect.vue'
+import { PRESET_QUOTES } from '../config/presets'
 import JSZip from 'jszip'
 
 const chatStore = useChatStore()
@@ -16,6 +17,7 @@ const exportIndex = ref(0)
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
 const version = __APP_VERSION__
+const currentQuote = ref('')
 let toastTimer: number | null = null
 
 // Option Constants
@@ -53,10 +55,13 @@ const showToast = (message: string, type: 'success' | 'error' = 'success') => {
 
 onMounted(async () => {
   await corpusStore.init()
+  // 随机挑选一句温暖语录
+  currentQuote.value = PRESET_QUOTES[Math.floor(Math.random() * PRESET_QUOTES.length)] || ''
   // 初始进入自动生成20条对话，避免空白
   chatStore.batchAddRandomDialog(20)
 })
 
+// 监听模式切换，自动刷新预览内容
 watch(currentMode, (newMode) => {
   chatStore.clearMessages()
   if (newMode === 'join') {
@@ -108,6 +113,7 @@ const triggerDownload = (name: string, blob: Blob) => {
   link.style.display = 'none'
   document.body.appendChild(link)
   link.click()
+  // 延时释放，确保浏览器已捕获下载请求
   setTimeout(() => {
     link.remove()
     URL.revokeObjectURL(link.href)
@@ -158,6 +164,7 @@ const renderImageBlob = async (index: number) => {
     const cropWidth = element.offsetWidth
     const exportHeight = cropHeight > 0 ? cropHeight : element.offsetHeight
 
+    // 1. 生成全图 Canvas
     const fullCanvas = await toCanvas(element, {
       cacheBust: true,
       backgroundColor: '#ededed',
@@ -165,13 +172,17 @@ const renderImageBlob = async (index: number) => {
       skipAutoScale: true
     })
 
+    // 2. 创建裁切 Canvas
     const cropCanvas = document.createElement('canvas')
-    cropCanvas.width = cropWidth * 2
+    cropCanvas.width = cropWidth * 2 // 适配 pixelRatio: 2
     cropCanvas.height = exportHeight * 2
     const ctx = cropCanvas.getContext('2d')
 
-    if (!ctx) throw new Error('Canvas Context 创建失败')
+    if (!ctx) {
+      throw new Error('Canvas Context 创建失败')
+    }
 
+    // 3. 绘制裁切区域
     ctx.drawImage(
       fullCanvas,
       0, cropTop * 2, cropWidth * 2, exportHeight * 2,
@@ -207,11 +218,19 @@ const handleBatchDownload = async () => {
     const zip = new JSZip()
     for (let i = 0; i < downloadCount.value; i++) {
       exportIndex.value = i + 1
+      // 1. 生成新内容
       handleGenerate()
+      
+      // 2. 等待 DOM 更新和头像图片加载
       await nextTick()
+      // 增加延时确保图片加载完成
       await new Promise(resolve => setTimeout(resolve, 800)) 
+      
+      // 3. 截图下载
       const image = await renderImageBlob(i)
-      if (image?.blob) zip.file(image.name, image.blob)
+      if (image?.blob) {
+        zip.file(image.name, image.blob)
+      }
     }
 
     const zipBlob = await zip.generateAsync({ type: 'blob' })
@@ -282,6 +301,7 @@ const handleBatchDownload = async () => {
             >
               拉人模式
             </button>
+            
             <div 
               class="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#7A9D8C] rounded-xl transition-all duration-500 ease-spring"
               :class="currentMode === 'chat' ? 'left-1.5' : 'left-[calc(50%+3px)]'"
@@ -296,9 +316,10 @@ const handleBatchDownload = async () => {
           />
         </div>
       </div>
+
     </div>
 
-    <!-- Section: Advanced (Collapsed) -->
+    <!-- Section: Advanced -->
     <details class="group space-y-5">
       <summary class="flex items-center justify-between gap-3 cursor-pointer list-none">
         <div class="flex items-center gap-2">
@@ -346,7 +367,6 @@ const handleBatchDownload = async () => {
         </div>
       </div>
 
-      <!-- New row for Nickname styles -->
       <div class="grid grid-cols-2 gap-4">
         <div class="group">
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">昵称大小</label>
@@ -368,7 +388,6 @@ const handleBatchDownload = async () => {
         </div>
       </div>
 
-      <!-- New row for Status Bar -->
       <div class="grid grid-cols-2 gap-4">
         <div class="group">
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">顶部时间</label>
@@ -402,7 +421,6 @@ const handleBatchDownload = async () => {
         </div>
       </div>
 
-      <!-- New row for System Message Colors -->
       <div class="grid grid-cols-2 gap-4">
         <div class="group">
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">提示背景 (RGBA)</label>
@@ -434,9 +452,7 @@ const handleBatchDownload = async () => {
          <h3 class="text-sm font-medium text-white/80 tracking-wide">导出设置</h3>
       </div>
 
-      <!-- Unified Generation UI -->
       <div class="p-5 bg-white/5 rounded-2xl border border-white/5 space-y-6">
-
         <div>
           <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">一键导出张数</label>
           <div class="flex items-center gap-3">
@@ -453,46 +469,26 @@ const handleBatchDownload = async () => {
 
         <div class="flex flex-col gap-3">
           <div class="flex gap-3">
-            <button 
-              @click="handleGenerate" 
-              class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]"
-            >
-              刷新
-            </button>
-            <button 
-              @click="handleQuickDownload" 
-              class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]"
-            >
-              下载当前 PNG
-            </button>
+            <button @click="handleGenerate" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">刷新</button>
+            <button @click="handleQuickDownload" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">下载当前 PNG</button>
             <button 
               @click="chatStore.isHighlightingCapture = !chatStore.isHighlightingCapture" 
               class="flex-1 py-3.5 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
               :class="chatStore.isHighlightingCapture ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-white/5 hover:bg-white/10 text-white/80'"
             >
-              <span v-if="chatStore.isHighlightingCapture">🔆 停止闪烁</span>
-              <span v-else>👁️ 预览截图区</span>
+              <span>{{ chatStore.isHighlightingCapture ? '🔆 停止闪烁' : '👁️ 预览截图区' }}</span>
             </button>
           </div>
           
-            <button 
-              @click="handleBatchDownload" 
-              :disabled="isDownloading"
-              class="w-full py-4 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
-            >
-              <span v-if="!isDownloading">🚀 一键批量下载成品图</span>
-              <span v-else class="flex items-center gap-2">
-                <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                正在导出中...
-              </span>
-            </button>
-            <div v-if="isDownloading" class="text-center text-xs text-white/50">
-              已导出 {{ exportIndex }} / {{ downloadCount }} 张
-            </div>
-          </div>
+          <button @click="handleBatchDownload" :disabled="isDownloading" class="w-full py-4 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-bold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+            <span v-if="!isDownloading">🚀 一键批量下载成品图</span>
+            <span v-else class="flex items-center gap-2">
+              <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              正在导出中...
+            </span>
+          </button>
+          <div v-if="isDownloading" class="text-center text-xs text-white/50">已导出 {{ exportIndex }} / {{ downloadCount }} 张</div>
+        </div>
         
         <p class="text-center text-[10px] text-white/30 tracking-wide leading-relaxed">
           点击一键下载将自动循环生成新内容并导出高清图片<br/>
@@ -500,16 +496,27 @@ const handleBatchDownload = async () => {
         </p>
       </div>
       
-       <!-- Footer -->
-        <footer class="mt-12 pt-8 border-t border-white/5 text-center">
-          <p class="text-xs text-white/30 mb-1">Feedback & Support</p>
-          <a href="mailto:webkubor@163.com" class="text-sm font-medium text-[#7A9D8C] hover:text-[#A27B5C] transition-colors tracking-wide">webkubor@163.com</a>
-          <p class="text-[10px] text-white/35 mt-3 tracking-widest">好易美票务公司</p>
-          <p class="text-[9px] text-white/20 mt-3 tracking-[0.2em] uppercase">
-            © 2026 Design by WebKubor · 
-            <router-link to="/changelog" class="hover:text-white/40 transition-colors">v{{ version }}</router-link>
+      <!-- Footer -->
+      <footer class="mt-12 pt-8 border-t border-white/5 text-center">
+        <!-- Daily Inspiration -->
+        <div v-if="currentQuote" class="mb-8 px-4">
+          <div class="inline-flex items-center gap-2 mb-2 text-[#7A9D8C] opacity-50">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span class="text-[10px] uppercase tracking-[0.2em] font-medium">Daily Inspiration</span>
+          </div>
+          <p class="text-xs text-white/50 leading-relaxed italic font-light tracking-wide">
+            “{{ currentQuote }}”
           </p>
-        </footer>
+        </div>
+
+        <p class="text-xs text-white/30 mb-1">Feedback & Support</p>
+        <a href="mailto:webkubor@163.com" class="text-sm font-medium text-[#7A9D8C] hover:text-[#A27B5C] transition-colors tracking-wide">webkubor@163.com</a>
+        <p class="text-[10px] text-white/35 mt-3 tracking-widest">好易美票务公司</p>
+        <p class="text-[9px] text-white/20 mt-3 tracking-[0.2em] uppercase">
+          © 2026 Design by WebKubor · 
+          <router-link to="/changelog" class="hover:text-white/40 transition-colors">v{{ version }}</router-link>
+        </p>
+      </footer>
     </div>
   </div>
 </template>
