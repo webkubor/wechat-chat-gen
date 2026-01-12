@@ -20,42 +20,46 @@ onMounted(() => {
 <template>
   <div class="flex flex-col lg:flex-row h-screen overflow-hidden bg-[#2C3639]">
     <!-- Left: Preview Area -->
-    <div class="flex-1 flex items-center justify-center relative transition-all duration-500 ease-out">
-      <div class="transform scale-[0.75] sm:scale-[0.85] md:scale-95 lg:scale-100 transition-transform duration-500 drop-shadow-2xl">
-        <DeviceFrame>
-          <ChatView />
-        </DeviceFrame>
+    <div class="flex-1 flex items-center justify-center relative transition-all duration-500 ease-out overflow-hidden">
+      <!-- 预览容器：移动端全屏铺满，不使用 scale；PC端保持 1:1 或微调 -->
+      <div class="w-full h-full lg:w-auto lg:h-auto flex items-center justify-center transition-all duration-500">
+        <div class="w-full h-full lg:w-auto lg:h-auto lg:transform lg:scale-95 xl:scale-100 drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+          <DeviceFrame>
+            <ChatView />
+          </DeviceFrame>
+        </div>
       </div>
       
-      <!-- Mobile Toggle Button (Floating Action Button) -->
+      <!-- Mobile Toggle Button (莫兰迪玻璃拟态风格) -->
       <button 
         @click="toggleEditor"
-        class="lg:hidden fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-full bg-[#7A9D8C] text-white shadow-xl flex items-center justify-center transition-all active:scale-90 hover:bg-[#6B8E78]"
+        class="lg:hidden fixed bottom-8 right-8 z-[60] w-16 h-16 rounded-2xl bg-[#7A9D8C]/80 backdrop-blur-xl text-white shadow-[0_8px_32px_rgba(122,157,140,0.4)] flex items-center justify-center transition-all active:scale-90 border border-white/20 group"
       >
-        <svg v-if="!isEditorOpen" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <svg v-if="!isEditorOpen" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="relative z-10">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
         </svg>
-        <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg v-else width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="relative z-10">
           <path d="M18 6L6 18M6 6l12 12"></path>
         </svg>
       </button>
     </div>
 
-    <!-- Right: Control Panel (PC: Static, Mobile: Bottom Sheet) -->
+    <!-- Right: Control Panel (PC: Static, Mobile: Elegant Bottom Sheet) -->
     <div 
       :class="[
-        'fixed lg:relative bottom-0 left-0 w-full lg:w-[420px] bg-[#2C3639]/95 backdrop-blur-2xl border-t lg:border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.4)] transition-all duration-500 z-50 flex flex-col',
-        isEditorOpen ? 'h-[85vh]' : 'h-0 lg:h-full overflow-hidden lg:overflow-visible'
+        'fixed lg:relative bottom-0 left-0 w-full lg:w-[440px] bg-[#2C3639]/95 backdrop-blur-3xl border-t lg:border-l border-white/10 shadow-[-20px_0_60px_rgba(0,0,0,0.5)] transition-all duration-500 z-50 flex flex-col',
+        isEditorOpen ? 'h-[88vh] rounded-t-[3rem]' : 'h-0 lg:h-full overflow-hidden lg:overflow-visible'
       ]"
     >
-      <!-- Mobile Handle Bar -->
-      <div @click="toggleEditor" class="lg:hidden w-full h-8 flex items-center justify-center cursor-pointer">
-        <div class="w-12 h-1 bg-white/20 rounded-full"></div>
+      <!-- Mobile Handle Bar (增加可交互感) -->
+      <div @click="toggleEditor" class="lg:hidden w-full h-10 flex items-center justify-center cursor-pointer shrink-0">
+        <div class="w-16 h-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors"></div>
       </div>
       
-      <!-- Header -->
-      <div class="px-8 py-4 lg:py-6 border-b border-white/5 flex justify-between items-center shrink-0">
+      <!-- Header (移动端更紧凑) -->
+      <div class="px-10 py-5 lg:py-8 border-b border-white/5 flex justify-between items-center shrink-0">
         <div>
           <h1 class="text-xl lg:text-2xl font-light tracking-wide text-[#E8F1F2]">
             WeChat<span class="font-bold text-[#7A9D8C]">Gen</span>
