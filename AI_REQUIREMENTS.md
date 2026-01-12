@@ -23,3 +23,4 @@
 - 新增全局 Toast 提示：导出成功/失败使用自定义提示替代系统弹窗。
 - 导出逻辑禁用 allowTaint，避免跨域资源导致导出失败；错误提示显示真实异常信息。
 - html2canvas 开启 foreignObjectRendering，避免 oklch 颜色解析失败导致导出异常。
+- 调整 CloudBase 初始化类型：补充 `CloudbaseInitConfig` 并移除 `as any`，避免类型绕过。

@@ -8,8 +8,10 @@ if (!envId) {
   console.warn('⚠️ CloudBase 未配置，云端同步功能将不可用。请在 .env 中配置 VITE_CLOUDBASE_ENV_ID')
 }
 
+type CloudbaseInitConfig = cloudbase.ICloudbaseConfig & { proxyUrl?: string }
+
 // 初始化 CloudBase
-const cloudbaseConfig: { env: string; region: string; proxyUrl?: string } = {
+const cloudbaseConfig: CloudbaseInitConfig = {
   env: envId || 'placeholder',
   region: region || 'ap-shanghai'
 }
@@ -17,7 +19,7 @@ const cloudbaseConfig: { env: string; region: string; proxyUrl?: string } = {
 // 开发模式下使用 Vite 代理
 if (import.meta.env.DEV) cloudbaseConfig.proxyUrl = '/tcb-api'
 
-export const tcb = cloudbase.init(cloudbaseConfig as any)
+export const tcb = cloudbase.init(cloudbaseConfig)
 
 // 登录初始化状态记录
 let loginPromise: Promise<void> | null = null

@@ -128,7 +128,9 @@ export function useExport() {
   const removeFromQueue = (id: string) => {
     const index = queue.value.findIndex(item => item.id === id)
     if (index === -1) return
-    URL.revokeObjectURL(queue.value[index].url)
+    const target = queue.value[index]
+    if (!target) return
+    URL.revokeObjectURL(target.url)
     queue.value.splice(index, 1)
     localDB.deletePreviewQueueItem(id).catch((e) => {
       console.error('队列删除失败', e)
@@ -153,11 +155,11 @@ export function useExport() {
     try {
       exportIndex.value = 0
       const zip = new JSZip()
-      for (let i = 0; i < queue.value.length; i++) {
-        exportIndex.value = i + 1
-        const item = queue.value[i]
-        zip.file(`wechat-queue-${Date.now()}-${i + 1}.png`, item.blob)
-      }
+      const timestamp = Date.now()
+      queue.value.forEach((item, index) => {
+        exportIndex.value = index + 1
+        zip.file(`wechat-queue-${timestamp}-${index + 1}.png`, item.blob)
+      })
 
       const zipBlob = await zip.generateAsync({ type: 'blob' })
       triggerDownload(`wechat-gen-${Date.now()}.zip`, zipBlob)
