@@ -19,7 +19,7 @@ const currentMode = ref<'chat' | 'join'>('chat')
 const genCount = ref(20)
 const downloadCount = ref(3)
 
-// 逻辑抽离
+// 逻辑逻辑抽离
 const { toastMessage, toastType, showToast } = useToast()
 const { isDownloading, exportIndex, handleQuickDownload, handleBatchDownload } = useExport({
   showToast,
@@ -28,7 +28,7 @@ const { isDownloading, exportIndex, handleQuickDownload, handleBatchDownload } =
 
 onMounted(async () => {
   await corpusStore.init()
-  // 初始自动生成
+  // 初始自动生成消息
   chatStore.batchAddRandomDialog(20)
 })
 
@@ -55,7 +55,7 @@ const handleGenerate = () => {
 
 <template>
   <div class="space-y-8 relative">
-    <!-- Toast Notification -->
+    <!-- Toast 提示通知 -->
     <transition name="toast">
       <div
         v-if="toastMessage"
@@ -66,13 +66,13 @@ const handleGenerate = () => {
       </div>
     </transition>
     
-    <!-- 1. 基础设置 -->
+    <!-- 1. 基础设置模块 -->
     <BasicConfig v-model:mode="currentMode" />
 
-    <!-- 2. 高级设置 (Details) -->
+    <!-- 2. 高级设置模块 -->
     <AdvancedConfig />
 
-    <!-- 3. 导出设置 -->
+    <!-- 3. 导出与操作模块 -->
     <ExportConfig 
       v-model:downloadCount="downloadCount"
       v-model:exportIndex="exportIndex"
@@ -82,7 +82,7 @@ const handleGenerate = () => {
       @batch-download="handleBatchDownload(downloadCount)"
     />
 
-    <!-- 4. 页脚语录与版权 -->
+    <!-- 4. 页脚信息模块 -->
     <ConfigFooter />
   </div>
 </template>
