@@ -3,7 +3,7 @@ import { createPinia } from 'pinia'
 import router from './router'
 import './style.css'
 import App from './App.vue'
-import { auth } from './utils/cloudbase'
+import { tcb } from './utils/cloudbase'
 import { initMessage } from './utils/message'
 
 // 初始化全局消息提示 (window.$message)
@@ -29,13 +29,25 @@ window.onunhandledrejection = (event) => handleError(event.reason)
 // CloudBase 匿名登录初始化
 const initCloudBase = async () => {
   try {
+    const auth = tcb.auth()
     const loginState = await auth.getLoginState()
     if (!loginState) {
-      await (auth as any).anonymousAuthProvider().signIn()
+      // 兼容不同版本的 SDK：有的版本是函数，有的版本是对象
+      const provider = (auth as any).anonymousAuthProvider
+      
+      if (typeof provider === 'function') {
+        await provider().signIn()
+      } else if (provider && typeof provider.signIn === 'function') {
+        await provider.signIn()
+      } else if (typeof (auth as any).signInAnonymously === 'function') {
+        await (auth as any).signInAnonymously()
+      } else {
+        throw new Error('当前 CloudBase SDK 环境不支持匿名登录，请检查控制台配置或 SDK 版本')
+      }
       console.log('☁️ CloudBase 匿名登录成功')
     }
   } catch (e) {
-    handleError(e) // 使用统一错误处理
+    handleError(e)
   }
 }
 

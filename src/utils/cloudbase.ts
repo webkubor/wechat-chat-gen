@@ -13,8 +13,5 @@ export const tcb = cloudbase.init({
   region: region || 'ap-shanghai'
 })
 
-// 初始化数据库
+// 按需初始化数据库
 export const db = tcb.database()
-
-// 初始化鉴权
-export const auth = tcb.auth()
