@@ -28,6 +28,7 @@ const compareVersions = (v1: string, v2: string) => {
 const checkUpdate = async () => {
   // 如果当前已经显示更新提示或已经手动忽略，则不再检查
   if (hasUpdate.value || isDismissed.value) return
+  if (import.meta.env.DEV) return
 
   try {
     // 添加时间戳防止缓存

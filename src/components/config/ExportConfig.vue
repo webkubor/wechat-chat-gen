@@ -38,13 +38,15 @@ defineEmits<{
       <div class="flex flex-col gap-3">
         <div class="flex gap-3">
           <button @click="$emit('generate')" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">生成预览</button>
-          <button @click="chatStore.clearMessages()" class="flex-1 py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-medium text-sm border border-red-500/20 transition-all active:scale-[0.98]">清空消息</button>
-          <button @click="$emit('quickDownload')" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">下载当前</button>
+          <button @click="$emit('quickDownload')" class="flex-1 py-3.5 bg-white/10 hover:bg-white/15 text-white rounded-xl font-semibold text-sm border border-white/10 transition-all active:scale-[0.98]">下载当前</button>
         </div>
-        
-        <button @click="chatStore.isHighlightingCapture = !chatStore.isHighlightingCapture" class="w-full py-3.5 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2" :class="chatStore.isHighlightingCapture ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-white/5 hover:bg-white/10 text-white/80'">
-          <span>{{ chatStore.isHighlightingCapture ? '隐藏截图范围' : '显示截图范围' }}</span>
-        </button>
+
+        <div class="flex items-center justify-between text-[11px] text-white/40">
+          <button @click="chatStore.isHighlightingCapture = !chatStore.isHighlightingCapture" class="hover:text-white/70 transition-colors">
+            {{ chatStore.isHighlightingCapture ? '隐藏截图范围' : '显示截图范围' }}
+          </button>
+          <button @click="chatStore.clearMessages()" class="hover:text-red-400 transition-colors">清空消息</button>
+        </div>
 
         <button @click="$emit('addToQueue')" :disabled="isQueueing" class="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
           <svg v-if="isQueueing" class="animate-spin h-4 w-4 text-white/70" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
