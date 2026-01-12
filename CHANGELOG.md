@@ -1,3 +1,14 @@
+## [1.1.0] - 2026-01-12
+
+### Added
+- **移动端全屏预览**: 针对真机优化，自动隐藏设备外壳装饰。
+- **底部抽屉编辑器**: 在移动端通过浮动按钮唤起 85vh 高度的配置抽屉。
+- **AI 技能管理员**: 在 AI_Common 中同步建立全套 AI 扩展协议。
+
+### Improved
+- 优化了 PWA Master 技能的工作流逻辑。
+- 增强了 juejin-writer 的 SVG 逻辑图生成能力。
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
