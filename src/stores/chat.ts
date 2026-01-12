@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { useCorpusStore } from './corpus'
 import { localDB } from '../utils/localdb'
+import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_AVATARS } from '../config/presets'
 import defaultBg from '../assets/bg.jpg'
 
 export type MessageType = 'text' | 'system' | 'image'
@@ -48,7 +49,6 @@ export const useChatStore = defineStore('chat', {
   actions: {
     // --- Persistence ---
     async init() {
-      // Load saved session
       try {
         const saved = await localDB.loadChatSession()
         if (saved) {
@@ -57,7 +57,6 @@ export const useChatStore = defineStore('chat', {
           this.backgroundImage = saved.backgroundImage ?? this.backgroundImage
           this.messages = saved.messages ?? []
           this.currentUser = saved.currentUser ?? this.currentUser
-          // Restore settings if needed, or keep localstorage for config
         }
       } catch (e) {
         console.error('Failed to load chat session', e)
@@ -70,7 +69,7 @@ export const useChatStore = defineStore('chat', {
           groupTitle: this.groupTitle,
           memberCount: this.memberCount,
           backgroundImage: this.backgroundImage,
-          messages: JSON.parse(JSON.stringify(this.messages)), // Deep copy to avoid proxy issues
+          messages: JSON.parse(JSON.stringify(this.messages)),
           currentUser: JSON.parse(JSON.stringify(this.currentUser))
         })
       } catch (e) {
@@ -113,33 +112,8 @@ export const useChatStore = defineStore('chat', {
 
     // --- Generators ---
     getRandomUser() {
-      const names = [
-        'AAA建材王总', '水晶女孩', '追光者', '晚风', '向日葵',
-        '简单快乐', '星光收集者', '小幸运', '纸飞机', '晴空',
-        '夜行者', '以梦为马', '搁浅的鲸', '东篱', '发光体',
-        '快乐小狗', 'momo', '用户88291', '卡布奇诺', '往事随风',
-        '花开富贵', '除了帅一无所有', '只是近黄昏', '小仙女', '大魔王',
-        '我的奶茶', '山川与海', '半岛来信', '风筝与猫', '龙卷风',
-        '淡泊人生', '云淡风轻', '往事如烟', '奋斗中的小李', '逆流而上',
-        'Cc', 'David', 'Lisa', 'Mike', 'Tom', 'Jerry'
-      ]
-      
-      const avatarPool = [
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=100&h=100&fit=crop'
-      ]
-
-      const name = names[Math.floor(Math.random() * names.length)] || '用户'
-      const avatar = avatarPool[Math.floor(Math.random() * avatarPool.length)] || ''
+      const name = PRESET_NAMES[Math.floor(Math.random() * PRESET_NAMES.length)] || '用户'
+      const avatar = PRESET_AVATARS[Math.floor(Math.random() * PRESET_AVATARS.length)] || ''
 
       return {
         name,
@@ -147,7 +121,6 @@ export const useChatStore = defineStore('chat', {
       }
     },
     batchAddMessages(lines: string[]) {
-      // ... (logic same as before, simplified for brevity but kept functional)
       lines.forEach(line => {
         if (!line.trim()) return
         const parts = line.split(/[:：]/)
@@ -162,7 +135,7 @@ export const useChatStore = defineStore('chat', {
             content = parts.slice(1).join(':').trim()
             if (name === 'Me' || name === '我') {
               isMe = true
-              sender = { name: '我', avatar: '' }
+              sender = { name: '我', avatar: this.currentUser.avatar }
             } else {
               sender = { name, avatar: '' }
             }
@@ -212,9 +185,7 @@ export const useChatStore = defineStore('chat', {
 
       const corpusStore = useCorpusStore()
       const corpusDialogues = corpusStore.dialogues.map(item => item.content).filter(Boolean)
-      const hypes = corpusDialogues.length ? corpusDialogues : [
-        '终于等到这一天了！', '有人出本场的票吗？求两张！', '我在场馆门口了，人超多！'
-      ]
+      const hypes = corpusDialogues.length ? corpusDialogues : PRESET_DIALOGUES
       
       for (let i = 0; i < count; i++) {
         const isMe = Math.random() > 0.8
