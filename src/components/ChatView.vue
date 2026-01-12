@@ -21,6 +21,23 @@ const getBubbleStyle = (isMe?: boolean) => {
   }
 }
 
+const getArrowStyle = (isMe?: boolean) => {
+  const backgroundColor = getBubbleStyle(isMe).backgroundColor
+  return isMe
+    ? {
+        borderLeftColor: backgroundColor,
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+        borderRightColor: 'transparent'
+      }
+    : {
+        borderRightColor: backgroundColor,
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+        borderLeftColor: 'transparent'
+      }
+}
+
 const getSystemMsgStyle = () => {
   if (isDark.value) {
     return {

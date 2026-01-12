@@ -17,11 +17,6 @@ const fontOptions = [
   { label: '等宽体 (极客)', value: 'monospace' }
 ]
 
-const statusBarThemeOptions = [
-  { label: '黑色图标', value: 'dark' },
-  { label: '白色图标', value: 'light' }
-]
-
 const handleBgUpload = (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (file) {
