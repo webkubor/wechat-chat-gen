@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { db } from '../utils/cloudbase'
 import { localDB } from '../utils/localdb'
+import { PRESET_DIALOGUES, PRESET_SYSTEMS } from '../config/presets'
 
 export interface CorpusItem {
   _id?: string
@@ -15,25 +16,9 @@ type SystemItem = CorpusItem & { type: 'system' }
 
 const CLOUD_COLLECTION = 'corpus'
 
-const PRESET_DIALOGUES = [
-  '终于等到这一天了！', '有人出本场的票吗？求两张！', '我在场馆门口了，人超多！',
-  '前排兜售瓜子饮料矿泉水~', '谁有歌单啊？求分享', '激动得睡不着觉',
-  '今晚会有新歌吗？', '必须有啊！全场大合唱预定', '为了看演出特意请了假',
-  '听说今晚有神秘嘉宾？', '真的假的？是谁啊？', '大家要注意防诈骗哦',
-  '舞台效果太顶了！', '已经在检票口排队了', '天气不错，适合听演唱会',
-  '有没有组队入场的？', '刚才在门口看到保姆车了！', '心跳已经120了'
-]
-const PRESET_SYSTEMS = [
-  '{name}邀请{invited}加入了群聊',
-  '{invited}通过扫描{name}分享的二维码加入群聊',
-  '{invited}通过群成员{name}分享的二维码加入群聊',
-  '{name}邀请{invited}、{other}加入了群聊',
-  '{invited}加入了群聊'
-]
-
 const getPresets = () => {
   const dialogues: DialogueItem[] = PRESET_DIALOGUES.map((content, index) => ({
-    id: -(index + 1),
+    id: -(index + 1), // Negative ID for presets
     type: 'dialogue',
     content,
     preset: true
@@ -69,6 +54,11 @@ export const useCorpusStore = defineStore('corpus', {
 
     async loadAll() {
       const { dialogues, systems } = getPresets()
+      
+      // 1. 优先展示预设
+      this.dialogues = [...dialogues]
+      this.systems = [...systems]
+
       let fetchedItems: CorpusItem[] = []
 
       if (this.mode === 'local') {
@@ -80,6 +70,7 @@ export const useCorpusStore = defineStore('corpus', {
       const customDialogues = fetchedItems.filter(i => i.type === 'dialogue')
       const customSystems = fetchedItems.filter(i => i.type === 'system')
 
+      // 2. 合并用户数据
       this.dialogues = [...dialogues, ...customDialogues]
       this.systems = [...systems, ...customSystems]
     },
@@ -114,6 +105,7 @@ export const useCorpusStore = defineStore('corpus', {
     },
 
     async exportAll() {
+      // 导出时包含所有可见数据（含预设）
       return {
         dialogues: this.dialogues.map(i => i.content),
         systems: this.systems.map(i => i.content)
@@ -126,7 +118,7 @@ export const useCorpusStore = defineStore('corpus', {
       for (const t of systems) if(t.trim()) await this.addEntry('system', t)
     },
 
-    // --- Local Engine (via localdb.ts) ---
+    // --- Local Engine ---
     async fetchLocal(): Promise<CorpusItem[]> {
       return (await localDB.getAll<CorpusItem>())
     },
@@ -143,7 +135,7 @@ export const useCorpusStore = defineStore('corpus', {
       await localDB.clear()
     },
 
-    // --- Cloud Engine (via cloudbase.ts) ---
+    // --- Cloud Engine ---
     async fetchCloud(): Promise<CorpusItem[]> {
       try {
         const { data } = await db.collection(CLOUD_COLLECTION).limit(1000).get()

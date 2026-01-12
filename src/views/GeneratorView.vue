@@ -1,7 +1,15 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useChatStore } from '../stores/chat'
 import DeviceFrame from '../components/DeviceFrame.vue'
 import ChatView from '../components/ChatView.vue'
 import ConfigPanel from '../components/ConfigPanel.vue'
+
+const chatStore = useChatStore()
+
+onMounted(() => {
+  chatStore.init()
+})
 </script>
 
 <template>
