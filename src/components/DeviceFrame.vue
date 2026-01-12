@@ -70,18 +70,7 @@ watch(() => chatStore.messages.length, () => {
           :class="isDark ? 'bg-[#191919]/95 backdrop-blur-xl border-b border-white/[0.05]' : 'bg-[#ededed]/95 backdrop-blur-xl border-b border-black/[0.05]'"
         >
           <!-- iOS 状态栏 (像素级还原) -->
-          <div v-if="chatStore.deviceType === 'ios'" class="w-full h-[44px] relative flex items-center px-8">
-            <!-- 灵动岛 -->
-            <div class="absolute top-3 left-1/2 -translate-x-1/2 w-[110px] h-[30px] bg-black rounded-[15px] z-50 flex items-center justify-end pr-3">
-               <div class="w-2 h-2 rounded-full bg-[#0a0a0a] shadow-[inset_0_0_2px_rgba(255,255,255,0.2)]"></div>
-            </div>
-            
-            <!-- 左侧: 时间 -->
-            <div class="flex-1 text-[14px] font-bold tracking-tight" :class="chatStore.statusBarTheme === 'light' ? 'text-white' : 'text-black'">
-              {{ chatStore.statusBarTime }}
-            </div>
-            
-            <!-- 右侧: 图标 -->
+          <div v-if="chatStore.deviceType === 'ios'" class="w-full h-[44px] relative">
             <StatusBarIcons />
           </div>
 
