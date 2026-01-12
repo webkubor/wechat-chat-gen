@@ -8,7 +8,6 @@ import ConfigFooter from '../components/config/ConfigFooter.vue'
 
 const chatStore = useChatStore()
 const isEditorOpen = ref(false) // 移动端控制编辑器展开/收起
-const appVersion = __APP_VERSION__ // 显式声明以便模板识别
 
 const toggleEditor = () => {
   isEditorOpen.value = !isEditorOpen.value

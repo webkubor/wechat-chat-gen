@@ -8,7 +8,6 @@ import { useExport } from '../composables/useExport'
 import BasicConfig from './config/BasicConfig.vue'
 import AdvancedConfig from './config/AdvancedConfig.vue'
 import ExportConfig from './config/ExportConfig.vue'
-import ConfigFooter from './config/ConfigFooter.vue'
 
 const chatStore = useChatStore()
 const corpusStore = useCorpusStore()
