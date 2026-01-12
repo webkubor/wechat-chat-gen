@@ -16,12 +16,9 @@ const corpusStore = useCorpusStore()
 // 核心状态
 const currentMode = ref<'chat' | 'join'>('chat')
 const genCount = ref(20)
-const downloadCount = ref(3)
 
 // 逻辑逻辑抽离 (现在不需要 showToast 了，由全局 window.$message 处理)
-const { isDownloading, exportIndex, handleQuickDownload, handleBatchDownload } = useExport({
-  handleGenerate: () => handleGenerate()
-})
+const { isDownloading, exportIndex, queue, handleQuickDownload, addToQueue, removeFromQueue, clearQueue, handleBatchDownload } = useExport()
 
 onMounted(async () => {
   await corpusStore.init()
@@ -62,12 +59,15 @@ const handleGenerate = () => {
 
     <!-- 3. 导出与操作模块 -->
     <ExportConfig 
-      v-model:downloadCount="downloadCount"
       v-model:exportIndex="exportIndex"
       v-model:isDownloading="isDownloading"
+      v-model:queue="queue"
       @generate="handleGenerate"
       @quick-download="handleQuickDownload"
-      @batch-download="handleBatchDownload(downloadCount)"
+      @add-to-queue="addToQueue"
+      @remove-from-queue="removeFromQueue"
+      @clear-queue="clearQueue"
+      @batch-download="handleBatchDownload"
     />
 
     <!-- 4. 页脚信息模块 -->

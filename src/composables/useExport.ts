@@ -1,17 +1,57 @@
-import { ref } from 'vue'
-import { toBlob, toCanvas } from 'html-to-image'
+import { ref, onBeforeUnmount } from 'vue'
+import { toCanvas } from 'html-to-image'
 import JSZip from 'jszip'
 
-interface ExportOptions {
-  handleGenerate: () => void
+interface QueueItem {
+  id: string
+  blob: Blob
+  url: string
+  dataUrl: string
+}
+
+const STORAGE_KEY = 'wechat_preview_queue'
+
+const dataUrlToBlob = (dataUrl: string) => {
+  const [header, body] = dataUrl.split(',')
+  if (!header || !body) throw new Error('无效的 data URL')
+  const match = /data:(.*?);base64/.exec(header)
+  const mime = match?.[1] || 'image/png'
+  const binary = atob(body)
+  const len = binary.length
+  const bytes = new Uint8Array(len)
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i)
+  return new Blob([bytes], { type: mime })
 }
 
 /**
  * 封装截图导出逻辑，使用全局 window.$message 进行提示
  */
-export function useExport(options: ExportOptions) {
+export function useExport() {
   const isDownloading = ref(false)
   const exportIndex = ref(0)
+  const queue = ref<QueueItem[]>([])
+
+  const persistQueue = () => {
+    const payload = queue.value.map(item => ({ id: item.id, dataUrl: item.dataUrl }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+  }
+
+  const restoreQueue = () => {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return
+    try {
+      const items = JSON.parse(raw) as Array<{ id: string; dataUrl: string }>
+      queue.value = items.map(item => {
+        const blob = dataUrlToBlob(item.dataUrl)
+        const url = URL.createObjectURL(blob)
+        return { id: item.id, dataUrl: item.dataUrl, blob, url }
+      })
+    } catch (e) {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  }
+
+  restoreQueue()
 
   const triggerDownload = (name: string, blob: Blob) => {
     const link = document.createElement('a')
@@ -26,90 +66,77 @@ export function useExport(options: ExportOptions) {
     }, 100)
   }
 
-  const handleQuickDownload = async () => {
+  const capturePreviewCanvas = async () => {
     const element = document.getElementById('wechat-screen')
     if (!element) {
       window.$message.error('未找到预览区域，无法导出')
-      return
-    }
-
-    try {
-      const blob = await toBlob(element, {
-        cacheBust: true,
-        backgroundColor: '#ededed',
-        pixelRatio: 2,
-        skipAutoScale: true
-      })
-
-      if (!blob) throw new Error('Blob 生成失败')
-      triggerDownload(`wechat-preview-${Date.now()}.png`, blob)
-      window.$message.success('预览图导出成功')
-    } catch (err) {
-      console.error('导出失败:', err)
-      window.$message.error('导出失败，请重试')
-    }
-  }
-
-  const renderImageBlob = async (index: number) => {
-    const element = document.getElementById('wechat-screen')
-    const header = document.getElementById('wechat-titlebar')
-    const inputBar = document.getElementById('wechat-input-bar')
-    if (!element || !header || !inputBar) {
-      window.$message.error('导出失败：找不到截图区域')
       return null
     }
 
     try {
-      const cropTop = Math.max(0, header.offsetTop)
-      const cropBottom = Math.max(0, inputBar.offsetTop)
-      const cropHeight = Math.max(0, cropBottom - cropTop)
-      const cropWidth = element.offsetWidth
-      const exportHeight = cropHeight > 0 ? cropHeight : element.offsetHeight
-
-      const fullCanvas = await toCanvas(element, {
+      return await toCanvas(element, {
         cacheBust: true,
         backgroundColor: '#ededed',
         pixelRatio: 2,
         skipAutoScale: true
-      })
-
-      const cropCanvas = document.createElement('canvas')
-      cropCanvas.width = cropWidth * 2
-      cropCanvas.height = exportHeight * 2
-      const ctx = cropCanvas.getContext('2d')
-      if (!ctx) throw new Error('Canvas Context 创建失败')
-
-      ctx.drawImage(
-        fullCanvas,
-        0, cropTop * 2, cropWidth * 2, exportHeight * 2,
-        0, 0, cropWidth * 2, exportHeight * 2
-      )
-
-      return new Promise<{ name: string; blob: Blob } | null>((resolve) => {
-        cropCanvas.toBlob((blob) => {
-          if (!blob) resolve(null)
-          else resolve({ name: `wechat-gen-${Date.now()}-${index + 1}.png`, blob })
-        }, 'image/png')
       })
     } catch (err) {
       console.error('渲染失败:', err)
+      window.$message.error('渲染失败，请重试')
       return null
     }
   }
 
-  const handleBatchDownload = async (downloadCount: number) => {
+  const handleQuickDownload = async () => {
+    const canvas = await capturePreviewCanvas()
+    if (!canvas) return
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      triggerDownload(`wechat-preview-${Date.now()}.png`, blob)
+      window.$message.success('预览图导出成功')
+    }, 'image/png')
+  }
+
+  const addToQueue = async () => {
+    const canvas = await capturePreviewCanvas()
+    if (!canvas) return
+    const dataUrl = canvas.toDataURL('image/png')
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      const id = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      const url = URL.createObjectURL(blob)
+      queue.value.push({ id, blob, url, dataUrl })
+      persistQueue()
+      window.$message.success('已加入待下载队列')
+    }, 'image/png')
+  }
+
+  const removeFromQueue = (id: string) => {
+    const index = queue.value.findIndex(item => item.id === id)
+    if (index === -1) return
+    URL.revokeObjectURL(queue.value[index].url)
+    queue.value.splice(index, 1)
+    persistQueue()
+  }
+
+  const clearQueue = () => {
+    queue.value.forEach(item => URL.revokeObjectURL(item.url))
+    queue.value = []
+    localStorage.removeItem(STORAGE_KEY)
+  }
+
+  const handleBatchDownload = async () => {
     if (isDownloading.value) return
+    if (queue.value.length === 0) return
     isDownloading.value = true
     
     try {
       exportIndex.value = 0
       const zip = new JSZip()
-      for (let i = 0; i < downloadCount; i++) {
+      for (let i = 0; i < queue.value.length; i++) {
         exportIndex.value = i + 1
-        options.handleGenerate()
-        await new Promise(resolve => setTimeout(resolve, 800)) 
-        const image = await renderImageBlob(i)
-        if (image?.blob) zip.file(image.name, image.blob)
+        const item = queue.value[i]
+        zip.file(`wechat-queue-${Date.now()}-${i + 1}.png`, item.blob)
       }
 
       const zipBlob = await zip.generateAsync({ type: 'blob' })
@@ -123,10 +150,18 @@ export function useExport(options: ExportOptions) {
     }
   }
 
+  onBeforeUnmount(() => {
+    queue.value.forEach(item => URL.revokeObjectURL(item.url))
+  })
+
   return {
     isDownloading,
     exportIndex,
+    queue,
     handleQuickDownload,
+    addToQueue,
+    removeFromQueue,
+    clearQueue,
     handleBatchDownload
   }
 }
