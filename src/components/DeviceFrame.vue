@@ -33,35 +33,41 @@ watch(() => chatStore.messages.length, () => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center p-4">
-    <!-- 手机外壳 (高端金属工艺感) -->
+  <div class="flex flex-col items-center md:p-4">
+    <!-- 手机外壳 (PC端显示高端金属工艺感，移动端全屏) -->
     <div 
       id="wechat-screen"
       :class="[
         'relative transition-all duration-500 bg-[#121212] box-content',
         chatStore.isHighlightingCapture ? 'ring-4 ring-[#7A9D8C] ring-offset-8 animate-pulse' : '',
+        // 移动端逻辑：md以下 100vw/100vh，无圆角，无阴影
+        'w-screen h-screen md:h-[812px] rounded-none md:shadow-[0_0_0_12px_#222,0_0_0_13px_#333,0_30px_60px_-15px_rgba(0,0,0,0.3)]',
+        // PC端逻辑：恢复固定尺寸和圆角
         chatStore.deviceType === 'ios' 
-          ? 'w-[375px] h-[812px] rounded-[55px] shadow-[0_0_0_12px_#222,0_0_0_13px_#333,0_30px_60px_-15px_rgba(0,0,0,0.3)]' 
-          : 'w-[360px] h-[780px] rounded-[35px] shadow-[0_0_0_12px_#222,0_0_0_13px_#333,0_30px_60px_-15px_rgba(0,0,0,0.3)]'
+          ? 'md:w-[375px] md:rounded-[55px]' 
+          : 'md:w-[360px] md:h-[780px] md:rounded-[35px]'
       ]"
     >
-      <!-- 屏幕内阴影，增加深度感 -->
-      <div class="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0_0_2px_rgba(255,255,255,0.1)] z-40"></div>
+      <!-- 屏幕内阴影 (仅PC端) -->
+      <div class="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0_0_2px_rgba(255,255,255,0.1)] z-40 hidden md:block"></div>
 
-      <!-- 物理按键 (装饰性) -->
-      <div class="absolute -left-[14px] top-32 w-[3px] h-8 bg-[#333] rounded-l-sm border-r border-black/20"></div>
-      <div class="absolute -left-[14px] top-48 w-[3px] h-14 bg-[#333] rounded-l-sm border-r border-black/20"></div>
-      <div class="absolute -left-[14px] top-64 w-[3px] h-14 bg-[#333] rounded-l-sm border-r border-black/20"></div>
-      <div class="absolute -right-[14px] top-44 w-[3px] h-20 bg-[#333] rounded-r-sm border-l border-black/20"></div>
+      <!-- 物理按键 (仅PC端显示) -->
+      <div class="hidden md:block absolute -left-[14px] top-32 w-[3px] h-8 bg-[#333] rounded-l-sm border-r border-black/20"></div>
+      <div class="hidden md:block absolute -left-[14px] top-48 w-[3px] h-14 bg-[#333] rounded-l-sm border-r border-black/20"></div>
+      <div class="hidden md:block absolute -left-[14px] top-64 w-[3px] h-14 bg-[#333] rounded-l-sm border-r border-black/20"></div>
+      <div class="hidden md:block absolute -right-[14px] top-44 w-[3px] h-20 bg-[#333] rounded-r-sm border-l border-black/20"></div>
 
-      <!-- 天线位置线 -->
-      <div class="absolute top-10 -left-[12px] w-[12px] h-[2px] bg-black/40"></div>
-      <div class="absolute bottom-10 -left-[12px] w-[12px] h-[2px] bg-black/40"></div>
+      <!-- 天线位置线 (仅PC端显示) -->
+      <div class="hidden md:block absolute top-10 -left-[12px] w-[12px] h-[2px] bg-black/40"></div>
+      <div class="hidden md:block absolute bottom-10 -left-[12px] w-[12px] h-[2px] bg-black/40"></div>
 
       <!-- 屏幕内容容器 -->
       <div 
         class="w-full h-full relative flex flex-col overflow-hidden bg-[#ededed] shadow-[inset_0_0_40px_rgba(0,0,0,0.1)]"
-        :class="chatStore.deviceType === 'ios' ? 'rounded-[43px]' : 'rounded-[25px]'"
+        :class="[
+          'rounded-none', // 移动端无圆角
+          chatStore.deviceType === 'ios' ? 'md:rounded-[43px]' : 'md:rounded-[25px]' // PC端保持圆角
+        ]"
         :style="backgroundStyle"
       >
         <!-- 1. 顶部导航区 -->
