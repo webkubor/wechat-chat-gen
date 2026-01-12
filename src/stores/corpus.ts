@@ -2,21 +2,14 @@ import { defineStore } from 'pinia'
 import { db } from '../utils/cloudbase'
 import { localDB } from '../utils/localdb'
 import { PRESET_DIALOGUES } from '../config/presets'
+import { type CorpusItem, DB_STORES } from '../types/database'
 
-export interface CorpusItem {
-  _id?: string
-  id?: number
-  type: 'dialogue'
-  content: string
-  preset?: boolean
-}
+export type { CorpusItem } // 导出供组件使用
 
-const CLOUD_COLLECTION = 'corpus'
-
-const getPresets = () => {
+const getPresets = (): CorpusItem[] => {
   return PRESET_DIALOGUES.map((content, index) => ({
     id: -(index + 1),
-    type: 'dialogue' as const,
+    type: 'dialogue',
     content,
     preset: true
   }))
@@ -43,19 +36,15 @@ export const useCorpusStore = defineStore('corpus', {
 
     async loadAll() {
       const presets = getPresets()
-      
-      // 1. 优先展示预设
       this.dialogues = [...presets]
 
       let fetchedItems: CorpusItem[] = []
-
       if (this.mode === 'local') {
         fetchedItems = await this.fetchLocal()
       } else {
         fetchedItems = await this.fetchCloud()
       }
 
-      // 2. 合并用户自定义对话
       this.dialogues = [...presets, ...fetchedItems]
     },
 
@@ -120,7 +109,7 @@ export const useCorpusStore = defineStore('corpus', {
     // --- Cloud Engine ---
     async fetchCloud(): Promise<CorpusItem[]> {
       try {
-        const { data } = await db.collection(CLOUD_COLLECTION)
+        const { data } = await db.collection(DB_STORES.CORPUS)
           .where({ type: 'dialogue' })
           .limit(1000)
           .get()
@@ -133,7 +122,7 @@ export const useCorpusStore = defineStore('corpus', {
 
     async addCloud(content: string) {
       try {
-        await db.collection(CLOUD_COLLECTION).add({
+        await db.collection(DB_STORES.CORPUS).add({
           type: 'dialogue',
           content,
           created_at: new Date()
@@ -145,7 +134,7 @@ export const useCorpusStore = defineStore('corpus', {
 
     async deleteCloud(_id: string) {
       try {
-        await db.collection(CLOUD_COLLECTION).doc(_id).remove()
+        await db.collection(DB_STORES.CORPUS).doc(_id).remove()
       } catch (e) {
         console.error('Cloud delete failed', e)
       }
@@ -155,7 +144,7 @@ export const useCorpusStore = defineStore('corpus', {
       try {
         const items = await this.fetchCloud()
         for (const item of items) {
-          if (item._id) await db.collection(CLOUD_COLLECTION).doc(item._id).remove()
+          if (item._id) await db.collection(DB_STORES.CORPUS).doc(item._id).remove()
         }
       } catch (e) {
         console.error('Cloud clear failed', e)

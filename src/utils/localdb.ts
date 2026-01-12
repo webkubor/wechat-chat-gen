@@ -1,12 +1,7 @@
-const DB_NAME = 'wechat_gen_db'
-const DB_VERSION = 2 // Upgrade version to trigger schema change
-const STORE_CORPUS = 'corpus'
-const STORE_CHAT = 'chat_history'
+import { DB_STORES, type ChatSession } from '../types/database'
 
-export interface LocalItem {
-  id?: number | string
-  [key: string]: any
-}
+const DB_NAME = 'wechat_gen_db'
+const DB_VERSION = 2
 
 class LocalDB {
   private db: IDBDatabase | null = null
@@ -20,16 +15,15 @@ class LocalDB {
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
         
-        // Store 1: Corpus (Existing)
-        if (!db.objectStoreNames.contains(STORE_CORPUS)) {
-          const store = db.createObjectStore(STORE_CORPUS, { keyPath: 'id', autoIncrement: true })
+        // Store 1: Corpus
+        if (!db.objectStoreNames.contains(DB_STORES.CORPUS)) {
+          const store = db.createObjectStore(DB_STORES.CORPUS, { keyPath: 'id', autoIncrement: true })
           store.createIndex('type', 'type', { unique: false })
         }
 
-        // Store 2: Chat History (New)
-        if (!db.objectStoreNames.contains(STORE_CHAT)) {
-          // 单例模式：只存一条记录，key 为 'current_session'
-          db.createObjectStore(STORE_CHAT, { keyPath: 'key' })
+        // Store 2: Chat History
+        if (!db.objectStoreNames.contains(DB_STORES.CHAT_HISTORY)) {
+          db.createObjectStore(DB_STORES.CHAT_HISTORY, { keyPath: 'key' })
         }
       }
       
@@ -46,23 +40,23 @@ class LocalDB {
     return this.db
   }
 
-  // --- Corpus Specific APIs (Keep compatible) ---
+  // --- Corpus Specific APIs ---
 
   async getAll<T>(): Promise<T[]> {
     const db = await this.getDB()
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_CORPUS, 'readonly')
-      const req = tx.objectStore(STORE_CORPUS).getAll()
+      const tx = db.transaction(DB_STORES.CORPUS, 'readonly')
+      const req = tx.objectStore(DB_STORES.CORPUS).getAll()
       req.onsuccess = () => resolve(req.result as T[])
       req.onerror = () => reject(req.error)
     })
   }
 
-  async add(item: Omit<LocalItem, 'id'>): Promise<void> {
+  async add(item: any): Promise<void> {
     const db = await this.getDB()
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_CORPUS, 'readwrite')
-      tx.objectStore(STORE_CORPUS).add(item)
+      const tx = db.transaction(DB_STORES.CORPUS, 'readwrite')
+      tx.objectStore(DB_STORES.CORPUS).add(item)
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })
@@ -71,8 +65,8 @@ class LocalDB {
   async delete(id: number): Promise<void> {
     const db = await this.getDB()
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_CORPUS, 'readwrite')
-      tx.objectStore(STORE_CORPUS).delete(id)
+      const tx = db.transaction(DB_STORES.CORPUS, 'readwrite')
+      tx.objectStore(DB_STORES.CORPUS).delete(id)
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })
@@ -81,32 +75,31 @@ class LocalDB {
   async clear(): Promise<void> {
     const db = await this.getDB()
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_CORPUS, 'readwrite')
-      tx.objectStore(STORE_CORPUS).clear()
+      const tx = db.transaction(DB_STORES.CORPUS, 'readwrite')
+      tx.objectStore(DB_STORES.CORPUS).clear()
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })
   }
 
-  // --- Chat History APIs (New) ---
+  // --- Chat History APIs ---
 
-  async saveChatSession(data: any): Promise<void> {
+  async saveChatSession(data: ChatSession): Promise<void> {
     const db = await this.getDB()
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_CHAT, 'readwrite')
-      // Save as a single object with key 'current'
-      tx.objectStore(STORE_CHAT).put({ key: 'current', ...data })
+      const tx = db.transaction(DB_STORES.CHAT_HISTORY, 'readwrite')
+      tx.objectStore(DB_STORES.CHAT_HISTORY).put(data)
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })
   }
 
-  async loadChatSession(): Promise<any> {
+  async loadChatSession(): Promise<ChatSession | null> {
     const db = await this.getDB()
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_CHAT, 'readonly')
-      const req = tx.objectStore(STORE_CHAT).get('current')
-      req.onsuccess = () => resolve(req.result)
+      const tx = db.transaction(DB_STORES.CHAT_HISTORY, 'readonly')
+      const req = tx.objectStore(DB_STORES.CHAT_HISTORY).get('current')
+      req.onsuccess = () => resolve(req.result as ChatSession || null)
       req.onerror = () => reject(req.error)
     })
   }

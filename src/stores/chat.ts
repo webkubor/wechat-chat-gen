@@ -2,24 +2,10 @@ import { defineStore } from 'pinia'
 import { useCorpusStore } from './corpus'
 import { localDB } from '../utils/localdb'
 import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_AVATARS, PRESET_SYSTEMS } from '../config/presets'
+import { type ChatMessage, type DeviceType, type StatusBarTheme, type PreviewTheme, type ChatSession } from '../types/database'
 import defaultBg from '../assets/bg.jpg'
 
-export type MessageType = 'text' | 'system' | 'image'
-export type DeviceType = 'ios' | 'android'
-export type StatusBarTheme = 'light' | 'dark'
-export type PreviewTheme = 'light' | 'dark'
-
-export interface Message {
-  id: string
-  type: MessageType
-  content: string
-  sender?: {
-    name: string
-    avatar: string
-  }
-  isMe?: boolean
-  timestamp?: string
-}
+export type { ChatMessage as Message, DeviceType, StatusBarTheme, PreviewTheme }
 
 export const useChatStore = defineStore('chat', {
   state: () => ({
@@ -37,13 +23,13 @@ export const useChatStore = defineStore('chat', {
     statusBarTime: '23:30',
     previewTheme: 'light' as PreviewTheme,
     currentUser: { name: '我', avatar: '' },
-    messages: [] as Message[]
+    messages: [] as ChatMessage[]
   }),
   actions: {
     // --- Persistence ---
     async init() {
       try {
-        const saved = await localDB.loadChatSession()
+        const saved = await localDB.loadChatSession() as ChatSession
         if (saved) {
           this.groupTitle = saved.groupTitle ?? this.groupTitle
           this.memberCount = saved.memberCount ?? this.memberCount
@@ -58,12 +44,17 @@ export const useChatStore = defineStore('chat', {
 
     async save() {
       try {
-        await localDB.saveChatSession({
+        const sessionData: Omit<ChatSession, 'updated_at'> = {
+          key: 'current',
           groupTitle: this.groupTitle,
           memberCount: this.memberCount,
           backgroundImage: this.backgroundImage,
           messages: JSON.parse(JSON.stringify(this.messages)),
           currentUser: JSON.parse(JSON.stringify(this.currentUser))
+        }
+        await localDB.saveChatSession({
+          ...sessionData,
+          updated_at: new Date()
         })
       } catch (e) {
         console.error('Failed to save chat session', e)
@@ -71,7 +62,7 @@ export const useChatStore = defineStore('chat', {
     },
 
     // --- Mutators ---
-    addMessage(msg: Message) {
+    addMessage(msg: ChatMessage) {
       this.messages.push(msg)
       this.save()
     },
@@ -107,11 +98,7 @@ export const useChatStore = defineStore('chat', {
     getRandomUser() {
       const name = PRESET_NAMES[Math.floor(Math.random() * PRESET_NAMES.length)] || '用户'
       const avatar = PRESET_AVATARS[Math.floor(Math.random() * PRESET_AVATARS.length)] || ''
-
-      return {
-        name,
-        avatar
-      }
+      return { name, avatar }
     },
     batchAddMessages(lines: string[]) {
       lines.forEach(line => {
@@ -147,7 +134,6 @@ export const useChatStore = defineStore('chat', {
     },
     batchAddJoinMessages(count: number) {
       const templates = PRESET_SYSTEMS
-
       for (let i = 0; i < count; i++) {
         const inviter = this.getRandomUser()
         const invited = this.getRandomUser()
