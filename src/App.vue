@@ -49,6 +49,21 @@ const dismissUpdate = () => {
   hasUpdate.value = false
   isDismissed.value = true
 }
+
+onMounted(() => {
+  // 初始检查
+  checkUpdate()
+  
+  // 每隔 10 分钟检查一次
+  setInterval(checkUpdate, 10 * 60 * 1000)
+  
+  // 页面重新获得焦点时检查
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      checkUpdate()
+    }
+  })
+})
 </script>
 
 <template>

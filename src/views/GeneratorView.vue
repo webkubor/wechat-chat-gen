@@ -7,6 +7,7 @@ import ConfigPanel from '../components/ConfigPanel.vue'
 
 const chatStore = useChatStore()
 const isEditorOpen = ref(false) // 移动端控制编辑器展开/收起
+const appVersion = __APP_VERSION__ // 显式声明以便模板识别
 
 const toggleEditor = () => {
   isEditorOpen.value = !isEditorOpen.value
@@ -81,7 +82,7 @@ onMounted(() => {
           <p class="text-xs text-white/30 mb-1">Feedback & Support</p>
           <a href="mailto:webkubor@163.com" class="text-sm font-medium text-[#7A9D8C] hover:text-[#A27B5C] transition-colors tracking-wide">webkubor@163.com</a>
           <div class="mt-4 flex flex-col items-center">
-            <span class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-[#7A9D8C] font-mono border border-white/5">v{{ __APP_VERSION__ }}</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-[#7A9D8C] font-mono border border-white/5">v{{ appVersion }}</span>
             <p class="text-[10px] text-white/35 mt-3 tracking-widest">好易美票务公司</p>
             <p class="text-[9px] text-white/20 mt-3 tracking-[0.2em] uppercase">© 2026 Design by WebKubor</p>
           </div>
