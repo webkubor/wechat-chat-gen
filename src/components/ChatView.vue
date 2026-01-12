@@ -37,6 +37,14 @@ const getArrowStyle = (isMe?: boolean) => {
         borderLeftColor: 'transparent'
       }
 }
+
+const handlePaste = (e: ClipboardEvent) => {
+  e.preventDefault()
+  const text = e.clipboardData?.getData('text/plain')
+  if (text) {
+    document.execCommand('insertText', false, text)
+  }
+}
 </script>
 
 <template>
@@ -73,6 +81,7 @@ const getArrowStyle = (isMe?: boolean) => {
             class="mb-0.5 ml-0.5 scale-90 origin-bottom-left outline-none min-w-[20px]"
             contenteditable
             @blur="(e) => chatStore.updateMessage(msg.id, 'name', (e.target as HTMLElement).innerText)"
+            @paste="handlePaste"
             :style="{ 
               color: chatStore.nicknameColor,
               fontSize: chatStore.nicknameSize + 'px',
@@ -90,6 +99,7 @@ const getArrowStyle = (isMe?: boolean) => {
             :style="getBubbleStyle(msg.isMe)"
             contenteditable
             @blur="(e) => chatStore.updateMessage(msg.id, 'content', (e.target as HTMLElement).innerText)"
+            @paste="handlePaste"
           >
             {{ msg.content }}
             

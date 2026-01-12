@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT_DIR = path.resolve(__dirname, '..')
 const VERSION_FILE = path.join(ROOT_DIR, 'public/version.json')
 const PACKAGE_FILE = path.join(ROOT_DIR, 'package.json')
+const CHANGELOG_FILE = path.join(ROOT_DIR, 'CHANGELOG.md')
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -19,6 +20,12 @@ async function main() {
   // 1. 读取当前版本
   const versionData = JSON.parse(fs.readFileSync(VERSION_FILE, 'utf-8'))
   const pkgData = JSON.parse(fs.readFileSync(PACKAGE_FILE, 'utf-8'))
+  let changelogContent = ''
+  if (fs.existsSync(CHANGELOG_FILE)) {
+    changelogContent = fs.readFileSync(CHANGELOG_FILE, 'utf-8')
+  } else {
+    changelogContent = '# Changelog\n\nAll notable changes to this project will be documented in this file.\n'
+  }
   
   console.log(`
 📦 当前版本: ${versionData.version}`)
@@ -29,8 +36,7 @@ async function main() {
 请输入新版本号 (默认 ${incrementPatch(versionData.version)}): `) || incrementPatch(versionData.version)
   
   // 3. 询问更新内容
-  console.log('
-📝 请输入更新内容 (输入空行结束):')
+  console.log('\n📝 请输入更新内容 (输入空行结束):')
   const features = []
   while (true) {
     const feature = await question(`- `)
@@ -61,13 +67,27 @@ async function main() {
   // 更新 package.json
   pkgData.version = newVersion
 
+  // 更新 CHANGELOG.md
+  const newChangelogEntry = `\n## [${newVersion}] - ${today}\n\n${features.map(f => `- ${f}`).join('\n')}\n`
+  // 在 Header 后插入新日志（假设 Header 占 4 行）
+  const headerEndIndex = changelogContent.indexOf('## [')
+  if (headerEndIndex !== -1) {
+    changelogContent = changelogContent.slice(0, headerEndIndex) + newChangelogEntry + changelogContent.slice(headerEndIndex)
+  } else {
+    // 如果找不到之前的版本记录，直接追加到头部说明之后
+    const lines = changelogContent.split('\n')
+    // 找到第一个非空行之后的空行位置，或者直接追加
+    changelogContent += newChangelogEntry
+  }
+
   // 5. 写入文件
   fs.writeFileSync(VERSION_FILE, JSON.stringify(versionData, null, 2))
   fs.writeFileSync(PACKAGE_FILE, JSON.stringify(pkgData, null, 2))
+  fs.writeFileSync(CHANGELOG_FILE, changelogContent)
   
   console.log(`
 ✅ 版本更新成功! v${newVersion}`)
-  console.log(`文件已更新: public/version.json, package.json`)
+  console.log(`文件已更新: public/version.json, package.json, CHANGELOG.md`)
   
   rl.close()
 }

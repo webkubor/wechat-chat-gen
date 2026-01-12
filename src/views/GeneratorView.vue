@@ -16,7 +16,7 @@ import ConfigPanel from '../components/ConfigPanel.vue'
     </div>
 
     <!-- Right: Control Panel (Glassmorphism) -->
-    <div class="w-full lg:w-[420px] h-[45vh] lg:h-auto flex flex-col bg-white/5 backdrop-blur-2xl border-t lg:border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.2)] transition-all duration-300">
+    <div class="w-full lg:w-[420px] h-[55vh] lg:h-auto flex flex-col bg-white/5 backdrop-blur-2xl border-t lg:border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.2)] transition-all duration-300">
       
       <!-- Header -->
       <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center">
