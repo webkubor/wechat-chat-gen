@@ -41,7 +41,7 @@ onMounted(() => {
         Build v{{ version }}
       </span>
       <span class="w-1 h-1 rounded-full bg-white/10"></span>
-      <a href="/changelog" class="text-[10px] text-white/35 hover:text-[#7A9D8C] tracking-[0.2em] font-medium transition-colors">更新日志</a>
+      <router-link to="/changelog" class="text-[10px] text-white/35 hover:text-[#7A9D8C] tracking-[0.2em] font-medium transition-colors">更新日志</router-link>
       <span class="w-1 h-1 rounded-full bg-white/10"></span>
       <p class="text-[10px] text-white/40 tracking-[0.2em] font-medium">好易美票务公司</p>
     </div>

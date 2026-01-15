@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useChatStore } from '../stores/chat'
-import StatusBarIcons from './StatusBarIcons.vue'
 import InputBarIcons from './InputBarIcons.vue'
+import StatusBarIcons from './StatusBarIcons.vue'
 import AndroidNavBar from './AndroidNavBar.vue'
+import { useSound } from '../composables/useSound'
 
 const chatStore = useChatStore()
+const { playSuccess } = useSound()
+
 const screenRef = ref<HTMLElement | null>(null)
 const titleBarRef = ref<HTMLElement | null>(null)
 const scrollContainer = ref<HTMLElement | null>(null)
 const isDark = computed(() => chatStore.previewTheme === 'dark')
 const captureTop = ref(0)
 const captureHeight = ref(0)
+const inputText = ref('')
+const isReadyToSend = computed(() => inputText.value.trim().length > 0)
 
 const backgroundStyle = computed(() => {
   const hasImage = Boolean(chatStore.backgroundImage)
@@ -63,6 +68,26 @@ onMounted(() => {
   }
   window.addEventListener('resize', updateCaptureHeight)
 })
+
+const handleSend = () => {
+  const content = inputText.value.trim()
+  if (!content) return
+
+  const currentName = chatStore.currentUser.name || '我'
+  chatStore.addMessage({
+    id: Math.random().toString(36).slice(2),
+    type: 'text',
+    content,
+    sender: { name: currentName, avatar: chatStore.currentUser.avatar },
+    isMe: true
+  })
+  inputText.value = ''
+}
+
+const onSendClick = () => {
+  handleSend()
+  playSuccess()
+}
 
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
@@ -171,14 +196,30 @@ onBeforeUnmount(() => {
               <!-- 语音图标 -->
               <InputBarIcons type="voice" />
 
-              <!-- 输入框占位 -->
-              <div
-                class="flex-1 h-[36px] rounded-[4px] border transition-all duration-300"
-                :class="isDark ? 'bg-[#2c2c2e] border-transparent' : 'bg-white border-black/[0.03]'"
-              ></div>
+              <!-- 输入框 -->
+              <input
+                v-model="inputText"
+                type="text"
+                placeholder="输入消息"
+                class="flex-1 h-[36px] px-3 text-[14px] rounded-[4px] border transition-all duration-300 outline-none"
+                :class="isDark
+                  ? 'bg-[#2c2c2e] border-transparent text-white/90 placeholder-white/40'
+                  : 'bg-white border-black/[0.03] text-black/90 placeholder-black/40'"
+                @keydown.enter.prevent="onSendClick"
+              />
 
-              <InputBarIcons type="emoji" />
-              <InputBarIcons type="plus" />
+              <button
+                v-if="isReadyToSend"
+                type="button"
+                @click="onSendClick"
+                class="h-[32px] px-3 rounded-[4px] text-[13px] font-medium text-[#1f2a24] bg-[#95ec69] hover:bg-[#86df5f] transition-colors"
+              >
+                发送
+              </button>
+              <template v-else>
+                <InputBarIcons type="emoji" />
+                <InputBarIcons type="plus" />
+              </template>
             </div>
           </div>
         </div>

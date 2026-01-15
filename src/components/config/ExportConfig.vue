@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useChatStore } from '../../stores/chat'
+import BaseSelect from '../ui/BaseSelect.vue'
+import { useSound } from '../../composables/useSound'
 
 const chatStore = useChatStore()
+const { playSuccess, playClick } = useSound()
 const exportIndex = defineModel<number>('exportIndex', { required: true })
 const isDownloading = defineModel<boolean>('isDownloading', { required: true })
 const queue = defineModel<Array<{ id: string; url: string }>>('queue', { required: true })
 const isQueueing = defineModel<boolean>('isQueueing', { required: true })
 const previewUrl = ref<string | null>(null)
+
+const exportRatioOptions = [
+  { label: '完整截图', value: 'full' },
+  { label: '3:4 高度截图', value: '3:4' }
+]
 
 const openPreview = (url: string) => {
   previewUrl.value = url
@@ -17,8 +25,61 @@ const closePreview = () => {
   previewUrl.value = null
 }
 
+const copyableMessages = computed(() => {
+  return chatStore.messages.filter((msg) => msg.type === 'text' && msg.content?.trim())
+})
+
+const canCopyDialog = computed(() => copyableMessages.value.length > 0)
+
+const buildDialogText = () => {
+  return copyableMessages.value.map((msg) => msg.content.trim()).join('\n')
+}
+
+const copyText = async (text: string) => {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text)
+    return true
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.top = '0'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  textarea.setSelectionRange(0, textarea.value.length)
+  const success = document.execCommand('copy')
+  document.body.removeChild(textarea)
+  return success
+}
+
+const handleCopyDialog = async () => {
+  if (!canCopyDialog.value) {
+    window.$message?.info('暂无可复制的对话内容')
+    return
+  }
+
+  const text = buildDialogText()
+  if (!text) {
+    window.$message?.info('暂无可复制的对话内容')
+    return
+  }
+
+  try {
+    const success = await copyText(text)
+    if (success) {
+      window.$message?.success('对话已复制')
+    } else {
+      window.$message?.error('复制失败，请重试')
+    }
+  } catch (error) {
+    window.$message?.error('复制失败，请重试')
+  }
+}
+
 defineEmits<{
-  (e: 'generate'): void
   (e: 'quickDownload'): void
   (e: 'addToQueue'): void
   (e: 'removeFromQueue', id: string): void
@@ -31,18 +92,16 @@ defineEmits<{
   <div class="space-y-5 pt-4 border-t border-white/5">
     <div class="flex items-center gap-2 mb-2">
        <div class="w-1 h-4 bg-[#A27B5C] rounded-full"></div>
-       <h3 class="text-sm font-medium text-white/80 tracking-wide">操作与导出</h3>
+       <h3 class="text-sm font-medium text-white/80 tracking-wide">导出</h3>
     </div>
 
     <div class="p-5 bg-white/5 rounded-2xl border border-white/5 space-y-6">
-      <div class="flex flex-col gap-3">
-        <div class="flex gap-3">
-          <button @click="$emit('generate')" class="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium text-sm border border-white/10 transition-all active:scale-[0.98]">生成更多内容</button>
-        </div>
+      <div class="group">
+        <label class="block text-[10px] font-medium text-white/40 uppercase tracking-widest mb-2">导出比例</label>
+        <BaseSelect v-model="chatStore.exportRatio" :options="exportRatioOptions" />
+      </div>
 
-        <div class="flex items-center justify-end text-[11px] text-white/40">
-          <button @click="chatStore.clearMessages()" class="hover:text-red-400 transition-colors">清空消息</button>
-        </div>
+      <div class="flex flex-col gap-3">
 
         <div class="rounded-xl border border-white/10 bg-black/10 p-3">
           <div class="flex items-center justify-between mb-2">
@@ -71,11 +130,11 @@ defineEmits<{
           </div>
           <div v-if="queue.length" class="text-center text-[10px] text-white/30 mt-3">点击缩略图预览</div>
           <div v-else class="text-center text-[10px] text-white/30 py-3">暂无队列预览</div>
-          <button @click="$emit('addToQueue')" :disabled="isQueueing" class="mt-3 w-full py-3 bg-white/10 hover:bg-white/15 text-white rounded-xl font-semibold text-sm border border-white/10 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <button @click="$emit('addToQueue'); playSuccess()" :disabled="isQueueing" class="mt-3 w-full py-3 bg-white/10 hover:bg-white/15 text-white rounded-xl font-semibold text-sm border border-white/10 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             <svg v-if="isQueueing" class="animate-spin h-4 w-4 text-white/70" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             <span>{{ isQueueing ? '加入中...' : '加入队列' }}</span>
           </button>
-          <button v-if="queue.length" @click="$emit('batchDownload')" :disabled="isDownloading" class="mt-3 w-full py-3 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-semibold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+          <button v-if="queue.length" @click="$emit('batchDownload'); playSuccess()" :disabled="isDownloading" class="mt-3 w-full py-3 bg-gradient-to-r from-[#7A9D8C] to-[#6B8E78] disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-semibold text-sm shadow-[0_10px_30px_-10px_rgba(122,157,140,0.4)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
             <span v-if="!isDownloading">批量下载（{{ queue.length }}）</span>
             <span v-else class="flex items-center gap-2">
               <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
