@@ -125,10 +125,12 @@ onMounted(() => {
       <div class="w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full shadow-xl flex items-center justify-center overflow-hidden cursor-pointer no-drag hover:bg-white/20 transition-colors">
         
         <!-- 未上传状态 -->
-        <label v-if="!hasFile" class="cursor-pointer flex items-center justify-center w-full h-full">
+        <label v-if="!hasFile" class="cursor-pointer flex items-center justify-center w-full h-full" title="上传音乐">
           <input type="file" accept="audio/*" class="hidden" @change="handleFile" />
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white/40">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white/40 group-hover:text-[#7A9D8C] transition-colors">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
           </svg>
         </label>
 
@@ -144,8 +146,8 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 音量调节 (侧边弹出) -->
-      <div class="absolute left-full ml-4 opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-500 origin-left no-drag">
+      <!-- 音量调节 (侧边弹出) - 仅上传音乐后显示 -->
+      <div v-if="hasFile" class="absolute left-full ml-4 opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100 transition-all duration-500 origin-left no-drag">
         <div class="bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 shadow-2xl">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white/40">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>

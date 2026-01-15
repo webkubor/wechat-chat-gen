@@ -167,10 +167,11 @@ export const useChatStore = defineStore('chat', {
           const namePart = parts[0]
           if (namePart) {
             const name = namePart.trim()
+            const currentName = this.currentUser.name || '我'
             content = parts.slice(1).join(':').trim()
-            if (name === 'Me' || name === '我') {
+            if (name === 'Me' || name === '我' || name === currentName) {
               isMe = true
-              sender = { name: '我', avatar: this.currentUser.avatar }
+              sender = { name: currentName, avatar: this.currentUser.avatar }
             } else {
               sender = { name, avatar: '' }
             }
@@ -214,7 +215,8 @@ export const useChatStore = defineStore('chat', {
     batchAddRandomDialog(count: number) {
       if (!this.currentUser.avatar) {
         const randomMe = this.getRandomUser()
-        this.currentUser = { name: '我', avatar: randomMe.avatar }
+        const currentName = this.currentUser.name || '我'
+        this.currentUser = { name: currentName, avatar: randomMe.avatar }
       }
 
       const corpusStore = useCorpusStore()

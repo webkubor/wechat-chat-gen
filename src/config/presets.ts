@@ -9,7 +9,6 @@ export const PRESET_DIALOGUES = [
   '有没有组队入场的？', '刚才在门口看到保姆车了！', '心跳已经120了'
 ]
 
-// 真实微信系统文案模板
 export const PRESET_SYSTEMS = [
   '你邀请 {invited} 加入了群聊  <span class="system-link">撤销</span>',
   '你邀请 {invited}、{other} 加入了群聊  <span class="system-link">撤销</span>',
@@ -19,11 +18,10 @@ export const PRESET_SYSTEMS = [
   '{invited} 通过扫描 {inviter} 分享的二维码加入群聊',
   '{invited} 通过扫描你分享的二维码加入群聊',
   '{inviter} 将 {invited} 移出了群聊',
-  '{inviter} 修改群名为 “{groupName}”'
+  '{inviter} 修改群名为 "{groupName}"'
 ]
 
-// 微信真实风格昵称库
-export const PRESET_NAMES = [
+const NICKNAME_LIST = [
   'AAA建材王总', '水晶女孩', '追光者', '晚风', '向日葵',
   '简单快乐', '星光收集者', '小幸运', '纸飞机', '晴空',
   '夜行者', '以梦为马', '搁浅的鲸', '东篱', '发光体',
@@ -34,7 +32,20 @@ export const PRESET_NAMES = [
   'Cc', 'David', 'Lisa', 'Mike', 'Tom', 'Jerry'
 ]
 
-// 精选高质感头像库 (Unsplash)
+export const PRESET_NAMES = NICKNAME_LIST
+
+export const PRESET_NICKNAMES: Array<{
+  type: 'nickname'
+  content: string
+  preset: true
+  id: number
+}> = NICKNAME_LIST.map((name, index) => ({
+  type: 'nickname' as const,
+  content: name,
+  preset: true as const,
+  id: -(index + 1)
+}))
+
 export const PRESET_AVATARS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
@@ -49,7 +60,6 @@ export const PRESET_AVATARS = [
   'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=100&h=100&fit=crop'
 ]
 
-// 温暖语录库
 export const PRESET_QUOTES = [
   "每一个普通的日子，都值得被认真记录。",
   "在这个喧嚣的世界，总有一些温柔在角落悄悄生长。",

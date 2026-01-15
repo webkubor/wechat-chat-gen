@@ -19,6 +19,16 @@ export interface CorpusItem {
   created_at?: Date | any // 创建时间
 }
 
+// --- 昵称库实体 ---
+export interface NicknameItem {
+  _id?: string      // 云端主键
+  id?: number       // 本地主键
+  type: 'nickname'  // 类型标识
+  content: string   // 昵称内容
+  preset?: boolean  // 是否预设 (不存入DB)
+  created_at?: Date | any // 创建时间
+}
+
 // --- 消息实体 (嵌套在会话中) ---
 export type MessageType = 'text' | 'system' | 'image'
 
@@ -59,6 +69,7 @@ export interface PreviewQueueItem {
 // --- 集合与表名常量 ---
 export const DB_STORES = {
   CORPUS: 'corpus',
+  NICKNAMES: 'nicknames',
   CHAT_HISTORY: 'chat_history',
   PREVIEW_QUEUE: 'preview_queue'
 } as const

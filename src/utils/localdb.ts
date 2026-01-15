@@ -1,8 +1,9 @@
 import { DB_STORES, type ChatSession, type PreviewQueueItem } from '../types/database'
 
 const DB_NAME = 'wechat_gen_db'
-const DB_VERSION = 4 // 升级版本以增加预览队列表
+const DB_VERSION = 5 // 升级版本以增加昵称库
 const STORE_CORPUS = DB_STORES.CORPUS
+const STORE_NICKNAMES = DB_STORES.NICKNAMES
 const STORE_CHAT = DB_STORES.CHAT_HISTORY
 const STORE_PREVIEW_QUEUE = DB_STORES.PREVIEW_QUEUE
 const STORE_RESOURCES = 'resources' // 新增图片资源表
@@ -21,6 +22,11 @@ class LocalDB {
         
         if (!db.objectStoreNames.contains(STORE_CORPUS)) {
           const store = db.createObjectStore(STORE_CORPUS, { keyPath: 'id', autoIncrement: true })
+          store.createIndex('type', 'type', { unique: false })
+        }
+
+        if (!db.objectStoreNames.contains(STORE_NICKNAMES)) {
+          const store = db.createObjectStore(STORE_NICKNAMES, { keyPath: 'id', autoIncrement: true })
           store.createIndex('type', 'type', { unique: false })
         }
 
@@ -110,6 +116,48 @@ class LocalDB {
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_CORPUS, 'readwrite')
       tx.objectStore(STORE_CORPUS).clear()
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  // --- 昵称库 API ---
+
+  async getAllNicknames(): Promise<any[]> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NICKNAMES, 'readonly')
+      const req = tx.objectStore(STORE_NICKNAMES).getAll()
+      req.onsuccess = () => resolve(req.result as any[])
+      req.onerror = () => reject(req.error)
+    })
+  }
+
+  async addNickname(item: any): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NICKNAMES, 'readwrite')
+      tx.objectStore(STORE_NICKNAMES).add(item)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  async deleteNickname(id: number): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NICKNAMES, 'readwrite')
+      tx.objectStore(STORE_NICKNAMES).delete(id)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  async clearNicknames(): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NICKNAMES, 'readwrite')
+      tx.objectStore(STORE_NICKNAMES).clear()
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })

@@ -67,8 +67,8 @@ onMounted(() => {
           </h1>
           <p class="text-white/40 text-[10px] tracking-wider mt-0.5 uppercase">Atmosphere Generator</p>
         </div>
-        <router-link to="/corpus" class="text-xs text-[#7A9D8C] hover:text-white transition-colors flex items-center gap-1">
-          <span>📚 语料库</span>
+        <router-link to="/treasure" class="text-xs text-[#7A9D8C] hover:text-white transition-colors flex items-center gap-1">
+          <span>💎 藏宝库</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </router-link>
       </div>
