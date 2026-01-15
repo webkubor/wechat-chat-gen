@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useChatStore } from '../../stores/chat'
 import BaseSelect from '../ui/BaseSelect.vue'
 import { useSound } from '../../composables/useSound'
 
 const chatStore = useChatStore()
-const { playSuccess, playClick } = useSound()
+const { playSuccess } = useSound()
 const exportIndex = defineModel<number>('exportIndex', { required: true })
 const isDownloading = defineModel<boolean>('isDownloading', { required: true })
 const queue = defineModel<Array<{ id: string; url: string }>>('queue', { required: true })
@@ -23,60 +23,6 @@ const openPreview = (url: string) => {
 
 const closePreview = () => {
   previewUrl.value = null
-}
-
-const copyableMessages = computed(() => {
-  return chatStore.messages.filter((msg) => msg.type === 'text' && msg.content?.trim())
-})
-
-const canCopyDialog = computed(() => copyableMessages.value.length > 0)
-
-const buildDialogText = () => {
-  return copyableMessages.value.map((msg) => msg.content.trim()).join('\n')
-}
-
-const copyText = async (text: string) => {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text)
-    return true
-  }
-
-  const textarea = document.createElement('textarea')
-  textarea.value = text
-  textarea.setAttribute('readonly', '')
-  textarea.style.position = 'fixed'
-  textarea.style.top = '0'
-  textarea.style.opacity = '0'
-  document.body.appendChild(textarea)
-  textarea.select()
-  textarea.setSelectionRange(0, textarea.value.length)
-  const success = document.execCommand('copy')
-  document.body.removeChild(textarea)
-  return success
-}
-
-const handleCopyDialog = async () => {
-  if (!canCopyDialog.value) {
-    window.$message?.info('暂无可复制的对话内容')
-    return
-  }
-
-  const text = buildDialogText()
-  if (!text) {
-    window.$message?.info('暂无可复制的对话内容')
-    return
-  }
-
-  try {
-    const success = await copyText(text)
-    if (success) {
-      window.$message?.success('对话已复制')
-    } else {
-      window.$message?.error('复制失败，请重试')
-    }
-  } catch (error) {
-    window.$message?.error('复制失败，请重试')
-  }
 }
 
 defineEmits<{

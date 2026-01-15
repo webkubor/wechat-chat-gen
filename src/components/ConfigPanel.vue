@@ -11,7 +11,7 @@ import ExportConfig from './config/ExportConfig.vue'
 
 const chatStore = useChatStore()
 const corpusStore = useCorpusStore()
-const { playClick, playSuccess, playError, playWater } = useSound()
+const { playSuccess, playWater } = useSound()
 
 // 核心状态
 const currentMode = ref<'chat' | 'join'>('chat')

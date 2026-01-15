@@ -8,7 +8,7 @@ import { useSound } from '../composables/useSound'
 type TabType = 'dialogues' | 'nicknames'
 
 const corpusStore = useCorpusStore()
-const { playSuccess, playError, playWater } = useSound()
+const { playSuccess, playClick, playWater } = useSound()
 const newContent = ref('')
 const isBusy = ref(false)
 const importInput = ref<HTMLInputElement | null>(null)
@@ -18,7 +18,6 @@ const dialogueItems = computed(() => corpusStore.dialogues)
 const nicknameItems = computed(() => corpusStore.nicknames)
 const currentModeLabel = computed(() => corpusStore.mode === 'local' ? '本地私享' : '云端同步')
 const cloudEnabled = isCloudEnabled()
-const currentItems = computed(() => currentTab.value === 'dialogues' ? dialogueItems.value : nicknameItems.value)
 
 onMounted(() => {
   corpusStore.init()
