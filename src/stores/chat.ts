@@ -156,18 +156,18 @@ export const useChatStore = defineStore('chat', {
     getRandomUser() {
       const name = PRESET_NAMES[Math.floor(Math.random() * PRESET_NAMES.length)] || '用户'
 
-      // 优先使用随机头像（如果启用且有可用服务）
+      // 优先使用网图随机头像（如果启用）
       const randomAvatarEnabled = localStorage.getItem('randomAvatarEnabled') !== 'false'
       if (randomAvatarEnabled) {
-        try {
-          // 简单地生成一个随机头像URL（不依赖外部服务）
-          const seed = Math.random().toString(36).substr(2, 9)
-          // 使用国内可访问的随机头像服务
-          const avatar = `https://api.multiavatar.com/${seed}.png`
-          return { name, avatar }
-        } catch (e) {
-          console.warn('Failed to generate random avatar:', e)
-        }
+        // 直接使用预设的头像库（简化版，实际应该从randomAvatarService获取）
+        const fallbackAvatars = [
+          'https://randomuser.me/api/portraits/women/1.jpg',
+          'https://randomuser.me/api/portraits/men/1.jpg',
+          'https://randomuser.me/api/portraits/women/2.jpg',
+          'https://randomuser.me/api/portraits/men/2.jpg',
+        ]
+        const avatar = fallbackAvatars[Math.floor(Math.random() * fallbackAvatars.length)]!
+        return { name, avatar }
       }
 
       // 使用自定义头像作为fallback
@@ -176,7 +176,7 @@ export const useChatStore = defineStore('chat', {
         ? avatarStore.customAvatars.map(item => item.url)
         : ['']
       const avatar = avatarPool[Math.floor(Math.random() * avatarPool.length)] || ''
-      return { name, avatar }
+      return { name, avatar: avatar }
     },
 
     batchAddMessages(lines: string[]) {
@@ -273,7 +273,7 @@ export const useChatStore = defineStore('chat', {
       if (!this.currentUser.avatar) {
         const randomMe = this.getRandomUser()
         const currentName = this.currentUser.name || '我'
-        this.currentUser = { name: currentName, avatar: randomMe.avatar }
+        this.currentUser = { name: currentName, avatar: randomMe.avatar! }
       }
 
       const corpusStore = useCorpusStore()
@@ -283,7 +283,7 @@ export const useChatStore = defineStore('chat', {
       for (let i = 0; i < count; i++) {
         const isMe = Math.random() > 0.8
         const content = hypes[Math.floor(Math.random() * hypes.length)] || '...'
-        const sender = isMe ? this.currentUser : this.getRandomUser()
+        const sender = isMe ? this.currentUser : this.getRandomUser() as { name: string; avatar: string }
         
         this.messages.push({
           id: Math.random().toString(36).substr(2, 9),

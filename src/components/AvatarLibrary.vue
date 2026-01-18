@@ -48,6 +48,14 @@ const generateRandomAvatars = (count: number = 20) => {
   randomAvatars.value = randomAvatarService.generateBatch(count)
 }
 
+// 重新洗牌
+const reshuffleRandomAvatars = () => {
+  randomAvatarService.reshuffle()
+  if (isRandomAvatarEnabled.value) {
+    generateRandomAvatars()
+  }
+}
+
 // 切换随机头像开关
 const toggleRandomAvatar = () => {
   isRandomAvatarEnabled.value = !isRandomAvatarEnabled.value
@@ -257,11 +265,11 @@ const triggerFileInput = () => {
             </span>
             <button
               v-if="isRandomAvatarEnabled"
-              @click="generateRandomAvatars()"
+              @click="reshuffleRandomAvatars()"
               class="text-[10px] text-white/40 hover:text-[#7A9D8C] transition-colors"
-              title="刷新随机头像"
+              title="重新洗牌随机头像"
             >
-              刷新
+              洗牌
             </button>
           </div>
           <div v-if="filteredAvatars.length" class="grid grid-cols-4 gap-3">
