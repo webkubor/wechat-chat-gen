@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useUpload } from '../composables/useUpload'
 import { useAvatarStore, AVATAR_MESSAGES, MAX_AVATAR_SIZE_MB, MAX_CUSTOM_AVATARS } from '../stores/avatar'
+import { randomAvatarService, type RandomAvatarSource } from '../utils/randomAvatar'
 
 interface Props {
   modelValue: string
@@ -22,14 +23,75 @@ const uploadHint = '上传中，请勿离开页面'
 const searchQuery = ref('')
 const customFileInput = ref<HTMLInputElement | null>(null)
 
-onMounted(() => {
-  avatarStore.init()
+// 随机头像相关
+const isRandomAvatarEnabled = ref(true)
+const randomAvatars = ref<string[]>([])
+const showSourceSelector = ref(false)
+const currentSource = computed(() => randomAvatarService.getCurrentSource())
+const availableSources = computed(() => randomAvatarService.getSources())
+
+onMounted(async () => {
+  await avatarStore.init()
+  // 恢复随机头像开关状态
+  const saved = localStorage.getItem('randomAvatarEnabled')
+  if (saved !== null) {
+    isRandomAvatarEnabled.value = saved === 'true'
+  }
+  // 生成初始随机头像
+  if (isRandomAvatarEnabled.value) {
+    generateRandomAvatars()
+  }
 })
 
-const filteredCustomAvatars = computed(() => {
-  if (!searchQuery.value) return avatarStore.customAvatars
+// 生成随机头像
+const generateRandomAvatars = (count: number = 20) => {
+  randomAvatars.value = randomAvatarService.generateBatch(count)
+}
+
+// 切换随机头像开关
+const toggleRandomAvatar = () => {
+  isRandomAvatarEnabled.value = !isRandomAvatarEnabled.value
+  localStorage.setItem('randomAvatarEnabled', isRandomAvatarEnabled.value.toString())
+
+  if (isRandomAvatarEnabled.value) {
+    generateRandomAvatars()
+  } else {
+    randomAvatars.value = []
+  }
+}
+
+// 选择头像源
+const selectAvatarSource = (source: RandomAvatarSource) => {
+  randomAvatarService.setSource(source)
+  showSourceSelector.value = false
+  if (isRandomAvatarEnabled.value) {
+    generateRandomAvatars()
+  }
+}
+
+// 优先显示随机头像，然后是自定义头像
+const allAvatars = computed(() => {
+  const result: Array<{url: string, isRandom?: boolean, id?: string}> = []
+
+  // 添加随机头像（如果启用）
+  if (isRandomAvatarEnabled.value) {
+    randomAvatars.value.forEach(url => {
+      result.push({ url, isRandom: true })
+    })
+  }
+
+  // 添加自定义头像
+  avatarStore.customAvatars.forEach(avatar => {
+    result.push({ url: avatar.url, isRandom: false, id: avatar.id })
+  })
+
+  return result
+})
+
+const filteredAvatars = computed(() => {
+  if (!searchQuery.value) return allAvatars.value
   const query = searchQuery.value.toLowerCase()
-  return avatarStore.customAvatars.filter(item => item.url.toLowerCase().includes(query))
+  return allAvatars.value.filter(item => item.url.toLowerCase().includes(query))
 })
 
 const canDeleteAvatar = computed(() => avatarStore.canDeleteAvatar)
@@ -132,7 +194,49 @@ const triggerFileInput = () => {
         </button>
       </div>
 
-      <div class="p-4 border-b border-white/10">
+      <div class="p-4 border-b border-white/10 space-y-3">
+        <!-- 随机头像开关 -->
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-white/80">随机头像</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-white/40">{{ currentSource.name }}</span>
+            <button
+              @click="showSourceSelector = !showSourceSelector"
+              class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs text-white/60 transition-all"
+            >
+              切换
+            </button>
+            <button
+              @click="toggleRandomAvatar"
+              class="relative w-8 h-4 bg-white/20 rounded-full transition-colors"
+              :class="{ 'bg-[#7A9D8C]': isRandomAvatarEnabled }"
+            >
+              <div
+                class="absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform"
+                :class="{ 'translate-x-4': isRandomAvatarEnabled }"
+              ></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 头像源选择器 -->
+        <div v-if="showSourceSelector" class="space-y-2">
+          <div class="text-xs text-white/60 mb-2">选择头像平台</div>
+          <div class="grid grid-cols-1 gap-1">
+            <button
+              v-for="source in availableSources"
+              :key="source.name"
+              @click="selectAvatarSource(source)"
+              class="text-left px-3 py-2 bg-white/5 hover:bg-white/10 rounded text-xs text-white/80 transition-all"
+              :class="{ 'bg-[#7A9D8C]/20 text-[#7A9D8C]': source.name === currentSource.name }"
+            >
+              <div class="font-medium">{{ source.name }}</div>
+              <div class="text-white/50 text-[10px]">{{ source.description }}</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 搜索框 -->
         <input
           v-model="searchQuery"
           type="text"
@@ -148,15 +252,32 @@ const triggerFileInput = () => {
       >
         <div>
           <div class="flex items-center justify-between mb-3">
-            <span class="text-[10px] text-white/30">{{ customCountLabel }}</span>
+            <span class="text-[10px] text-white/30">
+              {{ isRandomAvatarEnabled ? `随机头像 + ${customCountLabel}` : customCountLabel }}
+            </span>
+            <button
+              v-if="isRandomAvatarEnabled"
+              @click="generateRandomAvatars()"
+              class="text-[10px] text-white/40 hover:text-[#7A9D8C] transition-colors"
+              title="刷新随机头像"
+            >
+              刷新
+            </button>
           </div>
-          <div v-if="filteredCustomAvatars.length" class="grid grid-cols-4 gap-3">
+          <div v-if="filteredAvatars.length" class="grid grid-cols-4 gap-3">
             <div
-              v-for="avatar in filteredCustomAvatars"
-              :key="avatar.id"
+              v-for="(avatar, index) in filteredAvatars"
+              :key="avatar.isRandom ? `random-${index}` : avatar.id"
               class="relative aspect-square rounded-xl overflow-hidden ring-2 ring-transparent hover:ring-[#7A9D8C] transition-all hover:scale-105 group"
               :class="{ 'ring-[#7A9D8C]': modelValue === avatar.url }"
             >
+              <!-- 随机头像标识 -->
+              <div v-if="avatar.isRandom" class="absolute top-1 left-1 z-10">
+                <div class="w-4 h-4 bg-purple-500/80 rounded-full flex items-center justify-center">
+                  <span class="text-[8px] text-white font-bold">随</span>
+                </div>
+              </div>
+
               <button
                 type="button"
                 @click="handleSelectAvatar(avatar.url)"
@@ -165,9 +286,12 @@ const triggerFileInput = () => {
                 <img :src="avatar.url" class="w-full h-full object-cover" />
                 <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
               </button>
+
+              <!-- 只有自定义头像才显示删除按钮 -->
               <button
+                v-if="!avatar.isRandom"
                 type="button"
-                @click="handleDeleteAvatar(avatar.id)"
+                @click="handleDeleteAvatar(avatar.id!)"
                 :disabled="!canDeleteAvatar"
                 class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white/80 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 title="删除"
@@ -176,7 +300,9 @@ const triggerFileInput = () => {
               </button>
             </div>
           </div>
-          <div v-else class="text-xs text-white/20 text-center py-8">暂无头像，请上传</div>
+          <div v-else class="text-xs text-white/20 text-center py-8">
+            {{ isRandomAvatarEnabled ? '随机头像加载中...' : '暂无头像，请上传' }}
+          </div>
         </div>
       </div>
 

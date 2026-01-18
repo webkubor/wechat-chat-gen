@@ -155,6 +155,22 @@ export const useChatStore = defineStore('chat', {
 
     getRandomUser() {
       const name = PRESET_NAMES[Math.floor(Math.random() * PRESET_NAMES.length)] || '用户'
+
+      // 优先使用随机头像（如果启用且有可用服务）
+      const randomAvatarEnabled = localStorage.getItem('randomAvatarEnabled') !== 'false'
+      if (randomAvatarEnabled) {
+        try {
+          // 简单地生成一个随机头像URL（不依赖外部服务）
+          const seed = Math.random().toString(36).substr(2, 9)
+          // 使用国内可访问的随机头像服务
+          const avatar = `https://api.multiavatar.com/${seed}.png`
+          return { name, avatar }
+        } catch (e) {
+          console.warn('Failed to generate random avatar:', e)
+        }
+      }
+
+      // 使用自定义头像作为fallback
       const avatarStore = useAvatarStore()
       const avatarPool = avatarStore.customAvatars.length
         ? avatarStore.customAvatars.map(item => item.url)
