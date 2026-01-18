@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { watch } from 'vue'
 import { useCorpusStore } from './corpus'
 import { localDB } from '../utils/localdb'
-import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_AVATARS, PRESET_SYSTEMS } from '../config/presets'
+import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_SYSTEMS } from '../config/presets'
+import { useAvatarStore } from './avatar'
 import { type ChatMessage, type DeviceType, type StatusBarTheme, type PreviewTheme, type ExportRatio, type ChatSession } from '../types/database'
 import defaultBg from '../assets/bg.jpg'
 
@@ -32,6 +33,9 @@ export const useChatStore = defineStore('chat', {
      * 初始化：加载保存的会话，还原图片资源，并启动联动监听
      */
     async init() {
+      const avatarStore = useAvatarStore()
+      await avatarStore.init()
+
       // 1. 系统主题监听 (全局)
       const themeMedia = window.matchMedia('(prefers-color-scheme: dark)')
       themeMedia.addEventListener('change', (e) => {
@@ -151,7 +155,11 @@ export const useChatStore = defineStore('chat', {
 
     getRandomUser() {
       const name = PRESET_NAMES[Math.floor(Math.random() * PRESET_NAMES.length)] || '用户'
-      const avatar = PRESET_AVATARS[Math.floor(Math.random() * PRESET_AVATARS.length)] || ''
+      const avatarStore = useAvatarStore()
+      const avatarPool = avatarStore.customAvatars.length
+        ? avatarStore.customAvatars.map(item => item.url)
+        : ['']
+      const avatar = avatarPool[Math.floor(Math.random() * avatarPool.length)] || ''
       return { name, avatar }
     },
 
@@ -189,27 +197,60 @@ export const useChatStore = defineStore('chat', {
       this.save()
     },
 
-    batchAddJoinMessages(count: number) {
-      const templates = PRESET_SYSTEMS
-      for (let i = 0; i < count; i++) {
-        const inviter = this.getRandomUser()
-        const invited = this.getRandomUser()
-        const other = this.getRandomUser()
-        const template = templates[Math.floor(Math.random() * templates.length)] || '{inviter} 邀请 {invited} 加入了群聊'
-        
-        const content = template
-          .replace(/{inviter}/g, `<span class="system-name">${inviter.name}</span>`)
-          .replace(/{invited}/g, `<span class="system-name">${invited.name}</span>`)
-          .replace(/{other}/g, `<span class="system-name">${other.name}</span>`)
-          .replace(/{groupName}/g, `<span class="system-name">${this.groupTitle}</span>`)
-
-        this.messages.push({
-          id: Math.random().toString(36).substr(2, 9),
-          type: 'system',
-          content
-        })
-      }
+    addSystemMessage(content: string) {
+      this.messages.push({
+        id: Math.random().toString(36).substr(2, 9),
+        type: 'system',
+        content
+      })
       this.save()
+    },
+
+    addInviteSystemMessage() {
+      const inviter = this.getRandomUser()
+      const invited = this.getRandomUser()
+      const other = this.getRandomUser()
+      const template = PRESET_SYSTEMS[Math.floor(Math.random() * PRESET_SYSTEMS.length)] || '{inviter} 邀请 {invited} 加入了群聊'
+      const content = template
+        .replace(/{inviter}/g, `<span class="system-name">${inviter.name}</span>`)
+        .replace(/{invited}/g, `<span class="system-name">${invited.name}</span>`)
+        .replace(/{other}/g, `<span class="system-name">${other.name}</span>`)
+        .replace(/{groupName}/g, `<span class="system-name">${this.groupTitle}</span>`)
+
+      this.addSystemMessage(content)
+    },
+
+    addRedPacketSystemMessage(senderName?: string) {
+      let sender
+      if (senderName) {
+        sender = { name: senderName, avatar: '' }
+      } else {
+        sender = this.getRandomUser()
+      }
+      this.messages.push({
+        id: Math.random().toString(36).substr(2, 9),
+        type: 'redpacket',
+        content: '恭喜发财，大吉大利',
+        sender
+      })
+      this.save()
+    },
+
+    addRedPacketOpenedMessage(receivedBy: string, sentBy?: string) {
+      const senderName = sentBy || '我'
+      const content = `${receivedBy} 领取了<span class="system-name">${senderName}</span>的<span class="text-[#ffbc42]">红包</span>`
+      this.messages.push({
+        id: Math.random().toString(36).substr(2, 9),
+        type: 'red-packet-opened',
+        content
+      })
+      this.save()
+    },
+
+    batchAddJoinMessages(count: number) {
+      for (let i = 0; i < count; i++) {
+        this.addInviteSystemMessage()
+      }
     },
 
     batchAddRandomDialog(count: number) {

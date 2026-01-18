@@ -30,7 +30,7 @@ export interface NicknameItem {
 }
 
 // --- 消息实体 (嵌套在会话中) ---
-export type MessageType = 'text' | 'system' | 'image'
+export type MessageType = 'text' | 'system' | 'image' | 'redpacket' | 'red-packet-opened'
 
 export interface ChatMessage {
   id: string
@@ -66,10 +66,18 @@ export interface PreviewQueueItem {
   created_at: Date | any
 }
 
+// --- 头像库实体 ---
+export interface AvatarItem {
+  id: string
+  url: string
+  created_at: Date | any
+}
+
 // --- 集合与表名常量 ---
 export const DB_STORES = {
   CORPUS: 'corpus',
   NICKNAMES: 'nicknames',
   CHAT_HISTORY: 'chat_history',
-  PREVIEW_QUEUE: 'preview_queue'
+  PREVIEW_QUEUE: 'preview_queue',
+  AVATARS: 'avatars'
 } as const

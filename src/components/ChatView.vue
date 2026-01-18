@@ -53,6 +53,19 @@ const getSystemMsgStyle = () => {
   }
 }
 
+const getRedPacketStyle = (isMe?: boolean) => {
+  if (isDark.value) {
+    return {
+      backgroundColor: isMe ? '#c85a3e' : '#a0422d',
+      textColor: isMe ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.8)'
+    }
+  }
+  return {
+    backgroundColor: isMe ? '#f85a59' : '#fa9d3b',
+    textColor: isMe ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)'
+  }
+}
+
 const getSystemNameColor = computed(() => {
   return isDark.value ? '#7d90a9' : '#576b95'
 })
@@ -69,6 +82,11 @@ const onRemoveMessageClick = (id: string) => {
   chatStore.removeMessage(id)
   playWater()
 }
+
+const handleSystemMessageDoubleClick = (id: string) => {
+  chatStore.removeMessage(id)
+  playWater()
+}
 </script>
 
 <template>
@@ -77,20 +95,38 @@ const onRemoveMessageClick = (id: string) => {
 
       <!-- 系统消息 -->
       <div v-if="msg.type === 'system'" class="flex justify-center my-1 relative">
-        <div 
-          class="text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block cursor-text transition-colors duration-300"
+        <div
+          class="text-[11px] px-2.5 py-0.5 rounded-[4px] leading-tight max-w-[85%] text-center inline-block cursor-pointer transition-colors duration-300 hover:opacity-70"
           :style="getSystemMsgStyle()"
-          v-html="msg.content"
-          contenteditable
-          @blur="(e) => chatStore.updateMessage(msg.id, 'content', (e.target as HTMLElement).innerText)"
-        ></div>
+          @dblclick="handleSystemMessageDoubleClick(msg.id)"
+        >
+          <span v-html="msg.content"></span>
+        </div>
         <!-- 移动端长按删除提示可以放在这里，目前先通过 PC 悬浮按钮实现 -->
+      </div>
+
+      <!-- 领取红包消息 -->
+      <div v-if="msg.type === 'red-packet-opened'" class="flex justify-center my-2.5 px-6">
+        <div
+          :class="[
+            'flex items-center gap-2 px-3.5 py-1 rounded-[6px] backdrop-blur-md shadow-sm transition-colors',
+            isDark ? 'bg-black/30' : 'bg-black/10'
+          ]"
+        >
+          <!-- Tiny Red Packet Icon -->
+          <div class="w-[13px] h-[16px] bg-[#f54f42] rounded-[1px] relative flex items-center justify-center border-[0.5px] border-[#d33a2e] flex-shrink-0">
+            <div class="w-[3.5px] h-[3.5px] bg-[#ffd46b] rounded-full"></div>
+            <div class="absolute top-[3px] left-0 right-0 h-[0.3px] bg-[#d33a2e]/40"></div>
+          </div>
+
+          <span class="text-[12px] font-normal leading-none text-white/70" v-html="msg.content"></span>
+        </div>
       </div>
 
       <!-- 普通消息 -->
       <div v-else :class="['flex gap-2.5 items-start', msg.isMe ? 'flex-row-reverse' : 'flex-row']">
         <!-- 头像 -->
-        <div 
+        <div
           class="w-10 h-10 rounded-[4px] overflow-hidden flex-shrink-0 bg-gray-100 shadow-[0_0_1px_rgba(0,0,0,0.1)]"
         >
           <img v-if="msg.sender?.avatar" :src="msg.sender.avatar" class="w-full h-full object-cover" />
@@ -102,13 +138,13 @@ const onRemoveMessageClick = (id: string) => {
         <!-- 内容容器 -->
         <div class="flex flex-col" :class="msg.isMe ? 'items-end' : 'items-start'">
           <!-- 昵称 -->
-          <div 
-            v-if="!msg.isMe" 
+          <div
+            v-if="!msg.isMe"
             class="mb-0.5 ml-0.5 scale-90 origin-bottom-left outline-none min-w-[20px]"
             contenteditable
             @blur="(e) => chatStore.updateMessage(msg.id, 'name', (e.target as HTMLElement).innerText)"
             @paste="handlePaste"
-            :style="{ 
+            :style="{
               color: chatStore.nicknameColor,
               fontSize: chatStore.nicknameSize + 'px',
               fontFamily: chatStore.nicknameFont
@@ -116,10 +152,68 @@ const onRemoveMessageClick = (id: string) => {
           >
             {{ msg.sender?.name }}
           </div>
-          
+
           <div class="flex items-center gap-2 relative group/msg">
-            <!-- 气泡 -->
-            <div 
+            <!-- 红包气泡 -->
+            <div
+              v-if="msg.type === 'redpacket'"
+              class="relative w-[232px] cursor-pointer active:brightness-95 transition-all group"
+            >
+              <!-- Bubble Tail (角标) - Outside overflow-hidden container -->
+              <div
+                :class="[
+                  'absolute top-[14px] w-3 h-3 rotate-45 z-0',
+                  msg.isMe ? '-right-1.5 bg-[#fa9d3b]' : '-left-1.5 bg-[#fa9d3b]'
+                ]"
+              ></div>
+
+              <!-- Main Container with Rounded Corners and Clipping for Internal Elements -->
+              <div
+                class="relative z-10 rounded-[6px] overflow-hidden bg-[#fa9d3b] shadow-sm"
+                :style="{ backgroundColor: getRedPacketStyle(msg.isMe).backgroundColor }"
+              >
+                <!-- Main Content Area -->
+                <div class="px-[14px] py-[12px] flex items-center gap-3">
+                  <!-- Red Packet Icon - High Fidelity Curved Flap & Two-Tone Red -->
+                  <div class="w-[36px] h-[48px] rounded-[3px] flex-shrink-0 relative overflow-hidden shadow-md bg-[#f45c4d]">
+                    <!-- Top Flap (Darker Red) with Curved Bottom Edge -->
+                    <div class="absolute top-0 left-[-20%] w-[140%] h-[42%] bg-[#f24438] rounded-b-[60%] shadow-[0_1px_2px_rgba(0,0,0,0.1)]"></div>
+
+                    <!-- Subtle flap shadow/depth -->
+                    <div class="absolute top-[40%] left-0 right-0 h-[1px] bg-black/5"></div>
+
+                    <!-- Gold Coin with ¥ symbol - Positioned exactly on arc center -->
+                    <div class="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[16px] h-[16px] bg-[#fcd46d] rounded-full border-[0.5px] border-[#e2b85a] flex items-center justify-center text-[9px] text-[#f24438] font-black leading-none shadow-sm z-20">
+                      <span class="scale-[0.9]">¥</span>
+                    </div>
+
+                    <!-- Bottom highlight/texture for lighter red part -->
+                    <div class="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-black/5 to-transparent"></div>
+                  </div>
+
+                  <!-- Blessing Text -->
+                  <div class="flex-1">
+                    <div class="text-white text-[15.5px] font-normal leading-snug line-clamp-2 tracking-wide">
+                      {{ msg.content || "恭喜发财，大吉大利" }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Subtle Divider Line above footer - Matches with screenshot precisely -->
+                <div class="h-[0.5px] w-full bg-white opacity-[0.15]"></div>
+
+                <!-- Footer Band -->
+                <div
+                  class="px-[14px] py-[6.5px] text-[10.5px] transition-colors"
+                  :style="{ color: getRedPacketStyle(msg.isMe).textColor }"
+                >
+                  <span>微信红包</span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-else
               :class="[
                 'relative px-[11px] py-[9px] text-[15px] leading-[22px] rounded-[6px] max-w-[240px] break-words shadow-[0_1px_1px_rgba(0,0,0,0.05)] outline-none cursor-text'
               ]"
@@ -129,9 +223,9 @@ const onRemoveMessageClick = (id: string) => {
               @paste="handlePaste"
             >
               {{ msg.content }}
-              
+
               <!-- 小尖角图标 -->
-              <div 
+              <div
                 :class="[
                   'absolute top-[13px] w-0 h-0 border-[6px]',
                   msg.isMe ? 'right-[-5px]' : 'left-[-5px]'

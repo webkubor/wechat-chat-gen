@@ -1,11 +1,12 @@
-import { DB_STORES, type ChatSession, type PreviewQueueItem } from '../types/database'
+import { DB_STORES, type ChatSession, type PreviewQueueItem, type AvatarItem } from '../types/database'
 
 const DB_NAME = 'wechat_gen_db'
-const DB_VERSION = 5 // 升级版本以增加昵称库
+const DB_VERSION = 6 // 升级版本以增加头像库
 const STORE_CORPUS = DB_STORES.CORPUS
 const STORE_NICKNAMES = DB_STORES.NICKNAMES
 const STORE_CHAT = DB_STORES.CHAT_HISTORY
 const STORE_PREVIEW_QUEUE = DB_STORES.PREVIEW_QUEUE
+const STORE_AVATARS = DB_STORES.AVATARS
 const STORE_RESOURCES = 'resources' // 新增图片资源表
 
 class LocalDB {
@@ -36,6 +37,10 @@ class LocalDB {
 
         if (!db.objectStoreNames.contains(STORE_PREVIEW_QUEUE)) {
           db.createObjectStore(STORE_PREVIEW_QUEUE, { keyPath: 'id' })
+        }
+
+        if (!db.objectStoreNames.contains(STORE_AVATARS)) {
+          db.createObjectStore(STORE_AVATARS, { keyPath: 'id' })
         }
 
         // 新增资源库：存储 File/Blob 对象
@@ -76,6 +81,48 @@ class LocalDB {
       const req = tx.objectStore(STORE_RESOURCES).get(id)
       req.onsuccess = () => resolve(req.result?.blob || null)
       req.onerror = () => reject(req.error)
+    })
+  }
+
+  // --- 头像库 API ---
+
+  async getAllAvatars(): Promise<AvatarItem[]> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_AVATARS, 'readonly')
+      const req = tx.objectStore(STORE_AVATARS).getAll()
+      req.onsuccess = () => resolve(req.result as AvatarItem[])
+      req.onerror = () => reject(req.error)
+    })
+  }
+
+  async saveAvatar(item: AvatarItem): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_AVATARS, 'readwrite')
+      tx.objectStore(STORE_AVATARS).put(item)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  async deleteAvatar(id: string): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_AVATARS, 'readwrite')
+      tx.objectStore(STORE_AVATARS).delete(id)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  async clearAvatars(): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_AVATARS, 'readwrite')
+      tx.objectStore(STORE_AVATARS).clear()
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
     })
   }
 
