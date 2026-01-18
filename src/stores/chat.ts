@@ -159,12 +159,12 @@ export const useChatStore = defineStore('chat', {
       // 优先使用网图随机头像（如果启用）
       const randomAvatarEnabled = localStorage.getItem('randomAvatarEnabled') !== 'false'
       if (randomAvatarEnabled) {
-        // 直接使用预设的头像库（简化版，实际应该从randomAvatarService获取）
+        // 使用GitHub头像作为fallback
         const fallbackAvatars = [
-          'https://randomuser.me/api/portraits/women/1.jpg',
-          'https://randomuser.me/api/portraits/men/1.jpg',
-          'https://randomuser.me/api/portraits/women/2.jpg',
-          'https://randomuser.me/api/portraits/men/2.jpg',
+          'https://avatars.githubusercontent.com/u/1?v=4',
+          'https://avatars.githubusercontent.com/u/2?v=4',
+          'https://avatars.githubusercontent.com/u/3?v=4',
+          'https://avatars.githubusercontent.com/u/4?v=4',
         ]
         const avatar = fallbackAvatars[Math.floor(Math.random() * fallbackAvatars.length)]!
         return { name, avatar }

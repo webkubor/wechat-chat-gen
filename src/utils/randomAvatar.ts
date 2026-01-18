@@ -15,9 +15,57 @@ function isValidRandomAvatarSource(obj: any): obj is RandomAvatarSource {
          typeof obj.totalCount === 'number'
 }
 
-// 国内网图头像库 - 从各种来源收集的真实头像
+// 中国用户头像库 - 使用可靠的头像资源
 const CHINESE_AVATAR_PACK_1: string[] = [
-  // 这里可以添加大量网图头像URL - 示例数据
+  // 使用GitHub头像API和一些可靠的头像服务
+  'https://avatars.githubusercontent.com/u/1?v=4',
+  'https://avatars.githubusercontent.com/u/2?v=4',
+  'https://avatars.githubusercontent.com/u/3?v=4',
+  'https://avatars.githubusercontent.com/u/4?v=4',
+  'https://avatars.githubusercontent.com/u/5?v=4',
+  'https://avatars.githubusercontent.com/u/6?v=4',
+  'https://avatars.githubusercontent.com/u/7?v=4',
+  'https://avatars.githubusercontent.com/u/8?v=4',
+  'https://avatars.githubusercontent.com/u/9?v=4',
+  'https://avatars.githubusercontent.com/u/10?v=4',
+  'https://avatars.githubusercontent.com/u/11?v=4',
+  'https://avatars.githubusercontent.com/u/12?v=4',
+  'https://avatars.githubusercontent.com/u/13?v=4',
+  'https://avatars.githubusercontent.com/u/14?v=4',
+  'https://avatars.githubusercontent.com/u/15?v=4',
+  'https://avatars.githubusercontent.com/u/16?v=4',
+  'https://avatars.githubusercontent.com/u/17?v=4',
+  'https://avatars.githubusercontent.com/u/18?v=4',
+  'https://avatars.githubusercontent.com/u/19?v=4',
+  'https://avatars.githubusercontent.com/u/20?v=4',
+]
+
+const CHINESE_AVATAR_PACK_2: string[] = [
+  // 使用DiceBear的动漫风格头像，适合中国用户审美
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese1',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese2',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese3',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese4',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese5',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese6',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese7',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese8',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese9',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese10',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese11',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese12',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese13',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese14',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese15',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese16',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese17',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese18',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese19',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=chinese20',
+]
+
+const FOREIGN_AVATAR_PACK: string[] = [
+  // 国际头像包 - 各种风格
   'https://randomuser.me/api/portraits/women/1.jpg',
   'https://randomuser.me/api/portraits/men/1.jpg',
   'https://randomuser.me/api/portraits/women/2.jpg',
@@ -28,40 +76,6 @@ const CHINESE_AVATAR_PACK_1: string[] = [
   'https://randomuser.me/api/portraits/men/4.jpg',
   'https://randomuser.me/api/portraits/women/5.jpg',
   'https://randomuser.me/api/portraits/men/5.jpg',
-  'https://randomuser.me/api/portraits/women/6.jpg',
-  'https://randomuser.me/api/portraits/men/6.jpg',
-  'https://randomuser.me/api/portraits/women/7.jpg',
-  'https://randomuser.me/api/portraits/men/7.jpg',
-  'https://randomuser.me/api/portraits/women/8.jpg',
-  'https://randomuser.me/api/portraits/men/8.jpg',
-  'https://randomuser.me/api/portraits/women/9.jpg',
-  'https://randomuser.me/api/portraits/men/9.jpg',
-  'https://randomuser.me/api/portraits/women/10.jpg',
-  'https://randomuser.me/api/portraits/men/10.jpg',
-]
-
-const CHINESE_AVATAR_PACK_2: string[] = [
-  // 另一个头像包 - 示例数据
-  'https://randomuser.me/api/portraits/women/11.jpg',
-  'https://randomuser.me/api/portraits/men/11.jpg',
-  'https://randomuser.me/api/portraits/women/12.jpg',
-  'https://randomuser.me/api/portraits/men/12.jpg',
-  'https://randomuser.me/api/portraits/women/13.jpg',
-  'https://randomuser.me/api/portraits/men/13.jpg',
-  'https://randomuser.me/api/portraits/women/14.jpg',
-  'https://randomuser.me/api/portraits/men/14.jpg',
-  'https://randomuser.me/api/portraits/women/15.jpg',
-  'https://randomuser.me/api/portraits/men/15.jpg',
-]
-
-const FOREIGN_AVATAR_PACK: string[] = [
-  // 国外头像包 - 示例数据
-  'https://randomuser.me/api/portraits/women/16.jpg',
-  'https://randomuser.me/api/portraits/men/16.jpg',
-  'https://randomuser.me/api/portraits/women/17.jpg',
-  'https://randomuser.me/api/portraits/men/17.jpg',
-  'https://randomuser.me/api/portraits/women/18.jpg',
-  'https://randomuser.me/api/portraits/men/18.jpg',
 ]
 
 export const RANDOM_AVATAR_SOURCES: RandomAvatarSource[] = [
