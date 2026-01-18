@@ -202,45 +202,50 @@ const triggerFileInput = () => {
         </button>
       </div>
 
-      <div class="p-4 border-b border-white/10 space-y-3">
-        <!-- 随机头像开关 -->
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-white/80">随机头像</span>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-white/40">{{ currentSource.name }}</span>
-            <button
-              @click="showSourceSelector = !showSourceSelector"
-              class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs text-white/60 transition-all"
-            >
-              切换
-            </button>
-            <button
-              @click="toggleRandomAvatar"
-              class="relative w-8 h-4 bg-white/20 rounded-full transition-colors"
-              :class="{ 'bg-[#7A9D8C]': isRandomAvatarEnabled }"
-            >
-              <div
-                class="absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform"
-                :class="{ 'translate-x-4': isRandomAvatarEnabled }"
-              ></div>
-            </button>
+      <div class="p-4 border-b border-white/10 space-y-4">
+        <!-- 随机头像设置区域 -->
+        <div class="space-y-3">
+          <!-- 开关和当前平台 -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-white/80 font-medium">随机头像</span>
+              <button
+                @click="toggleRandomAvatar"
+                class="relative w-10 h-5 bg-white/20 rounded-full transition-colors duration-200"
+                :class="{ 'bg-[#7A9D8C]': isRandomAvatarEnabled }"
+              >
+                <div
+                  class="absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm"
+                  :class="{ 'translate-x-5': isRandomAvatarEnabled }"
+                ></div>
+              </button>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-white/50">{{ currentSource.name }}</span>
+              <button
+                @click="showSourceSelector = !showSourceSelector"
+                class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs text-white/70 hover:text-white transition-all"
+              >
+                切换平台
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- 头像源选择器 -->
-        <div v-if="showSourceSelector" class="space-y-2">
-          <div class="text-xs text-white/60 mb-2">选择头像平台</div>
-          <div class="grid grid-cols-1 gap-1">
-            <button
-              v-for="source in availableSources"
-              :key="source.name"
-              @click="selectAvatarSource(source)"
-              class="text-left px-3 py-2 bg-white/5 hover:bg-white/10 rounded text-xs text-white/80 transition-all"
-              :class="{ 'bg-[#7A9D8C]/20 text-[#7A9D8C]': source.name === currentSource.name }"
-            >
-              <div class="font-medium">{{ source.name }}</div>
-              <div class="text-white/50 text-[10px]">{{ source.description }}</div>
-            </button>
+          <!-- 头像源选择器 -->
+          <div v-if="showSourceSelector" class="bg-white/5 rounded-lg p-3">
+            <div class="text-xs text-white/60 mb-3 font-medium">选择头像平台</div>
+            <div class="grid grid-cols-1 gap-2">
+              <button
+                v-for="source in availableSources"
+                :key="source.name"
+                @click="selectAvatarSource(source)"
+                class="text-left px-3 py-2.5 bg-white/5 hover:bg-white/10 rounded-md text-sm text-white/80 transition-all border border-transparent"
+                :class="{ 'bg-[#7A9D8C]/20 border-[#7A9D8C]/30 text-[#7A9D8C]': source.name === currentSource.name }"
+              >
+                <div class="font-medium">{{ source.name }}</div>
+                <div class="text-white/50 text-xs">{{ source.description }}</div>
+              </button>
+            </div>
           </div>
         </div>
 
