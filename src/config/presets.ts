@@ -21,6 +21,12 @@ export const PRESET_SYSTEMS = [
   '{inviter} 修改群名为 "{groupName}"'
 ]
 
+export const PRESET_RED_PACKETS = [
+  '{sender} 发了一个红包',
+  '{sender} 发了一个拼手气红包',
+  '{sender} 发了一个普通红包'
+]
+
 const NICKNAME_LIST = [
   'AAA建材王总', '水晶女孩', '追光者', '晚风', '向日葵',
   '简单快乐', '星光收集者', '小幸运', '纸飞机', '晴空',

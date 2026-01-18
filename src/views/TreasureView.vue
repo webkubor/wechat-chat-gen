@@ -1,26 +1,38 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useCorpusStore, type CorpusItem, type NicknameItem } from '../stores/corpus'
+import { useAvatarStore } from '../stores/avatar'
 import { isCloudEnabled } from '../utils/cloudbase'
 import NicknameGrid from '../components/ui/NicknameGrid.vue'
 import { useSound } from '../composables/useSound'
+import { useUpload } from '../composables/useUpload'
 
-type TabType = 'dialogues' | 'nicknames'
+type TabType = 'dialogues' | 'nicknames' | 'avatars'
+
 
 const corpusStore = useCorpusStore()
+const avatarStore = useAvatarStore()
 const { playSuccess, playClick, playWater } = useSound()
+const { isUploading, processFile } = useUpload()
 const newContent = ref('')
 const isBusy = ref(false)
 const importInput = ref<HTMLInputElement | null>(null)
+const avatarUploadInput = ref<HTMLInputElement | null>(null)
 const currentTab = ref<TabType>('dialogues')
-
 const dialogueItems = computed(() => corpusStore.dialogues)
 const nicknameItems = computed(() => corpusStore.nicknames)
+const customAvatars = computed(() => avatarStore.customAvatars)
+const customAvatarCount = computed(() => avatarStore.totalCustomCount)
+const canUploadMore = computed(() => avatarStore.canAddMore)
+const canDeleteAvatar = computed(() => customAvatarCount.value >= 10)
 const currentModeLabel = computed(() => corpusStore.mode === 'local' ? '本地私享' : '云端同步')
 const cloudEnabled = isCloudEnabled()
 
+const MAX_AVATAR_SIZE_MB = 5
+
 onMounted(() => {
   corpusStore.init()
+  avatarStore.init()
 })
 
 const handleModeSwitch = (mode: 'local' | 'cloud') => {
@@ -35,7 +47,7 @@ const handleAdd = async () => {
   if (!newContent.value) return
   if (currentTab.value === 'dialogues') {
     await corpusStore.addDialogue(newContent.value)
-  } else {
+  } else if (currentTab.value === 'nicknames') {
     await corpusStore.addNickname(newContent.value)
   }
   newContent.value = ''
@@ -58,16 +70,50 @@ const handleDelete = async (item: CorpusItem | NicknameItem) => {
   
   if (currentTab.value === 'dialogues') {
     await corpusStore.deleteDialogue(item as CorpusItem)
-  } else {
+  } else if (currentTab.value === 'nicknames') {
     await corpusStore.deleteNickname(item as NicknameItem)
   }
 }
 
+const handleDeleteAvatar = async (id: string) => {
+  if (!canDeleteAvatar.value) {
+    window.$message?.info('头像少于 10 个时不允许删除')
+    return
+  }
+
+  const confirmed = window.$confirm
+    ? await window.$confirm({
+        title: '确认删除？',
+        message: '确定要删除这个头像吗？',
+        confirmText: '删除',
+        cancelText: '取消',
+        confirmType: 'danger'
+      })
+    : false
+
+  if (!confirmed) return
+
+  const removed = await avatarStore.removeCustomAvatar(id)
+  if (!removed) {
+    window.$message?.info('头像少于 10 个时不允许删除')
+    return
+  }
+
+  window.$message?.success('删除成功')
+}
+
+
 const handleClearAll = async () => {
-  const typeLabel = currentTab.value === 'dialogues' ? '语料' : '昵称'
-  const msg = corpusStore.mode === 'local' 
-    ? `确定要清空【本地】所有自定义${typeLabel}吗？` 
-    : `确定要清空【云端】所有${typeLabel}吗？这会影响所有用户！`
+  const typeLabel = currentTab.value === 'dialogues'
+    ? '语料'
+    : currentTab.value === 'nicknames'
+      ? '昵称'
+      : '头像'
+  const msg = currentTab.value === 'avatars'
+    ? '确定要清空所有自定义头像吗？'
+    : corpusStore.mode === 'local' 
+      ? `确定要清空【本地】所有自定义${typeLabel}吗？` 
+      : `确定要清空【云端】所有${typeLabel}吗？这会影响所有用户！`
   
   const confirmed = window.$confirm
     ? await window.$confirm({
@@ -85,8 +131,10 @@ const handleClearAll = async () => {
   try {
     if (currentTab.value === 'dialogues') {
       await corpusStore.clearDialogues()
-    } else {
+    } else if (currentTab.value === 'nicknames') {
       await corpusStore.clearNicknames()
+    } else {
+      await avatarStore.clearCustomAvatars()
     }
   } finally {
     isBusy.value = false
@@ -94,6 +142,7 @@ const handleClearAll = async () => {
 }
 
 const handleExport = async () => {
+  if (currentTab.value === 'avatars') return
   isBusy.value = true
   try {
     const data = await corpusStore.exportAll()
@@ -116,6 +165,7 @@ const handleImportClick = () => {
 }
 
 const handleImport = async (e: Event) => {
+  if (currentTab.value === 'avatars') return
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
 
@@ -139,7 +189,11 @@ const handleImport = async (e: Event) => {
   }
 }
 
-const placeholderText = computed(() => currentTab.value === 'dialogues' ? '输入新的对话语料...' : '输入新的昵称...')
+const placeholderText = computed(() => {
+  if (currentTab.value === 'dialogues') return '输入新的对话语料...'
+  if (currentTab.value === 'nicknames') return '输入新的昵称...'
+  return '头像库不需要手动添加'
+})
 
 const onClearAllClick = async () => {
   await handleClearAll()
@@ -156,7 +210,39 @@ const onImportClick = () => {
   playClick()
 }
 
+const triggerAvatarUpload = () => {
+  if (!avatarStore.canAddMore) {
+    window.$message?.error('头像库已满（最多 100 个）')
+    return
+  }
+  avatarUploadInput.value?.click()
+}
+
+const handleAvatarUpload = async (e: Event) => {
+  if (!avatarStore.canAddMore) {
+    window.$message?.error('头像库已满（最多 100 个）')
+    return
+  }
+
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  const url = await processFile(file, MAX_AVATAR_SIZE_MB)
+  if (url) {
+    const added = await avatarStore.addCustomAvatar(url)
+    if (!added) {
+      window.$message?.error('头像库已满（最多 100 个）')
+    }
+  }
+  input.value = ''
+}
+
 const onAddClick = async () => {
+  if (currentTab.value === 'avatars') {
+    window.$message?.info('头像库请通过上传添加')
+    return
+  }
   await handleAdd()
   playSuccess()
 }
@@ -192,8 +278,8 @@ const onAddClick = async () => {
       </div>
       <div class="flex items-center gap-3">
         <button @click="onClearAllClick" :disabled="isBusy" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-white transition-all disabled:opacity-50">清空</button>
-        <button @click="onExportClick" :disabled="isBusy" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-white transition-all disabled:opacity-50">导出</button>
-        <button @click="onImportClick" :disabled="isBusy" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-white transition-all disabled:opacity-50">导入</button>
+        <button @click="onExportClick" :disabled="isBusy || currentTab === 'avatars'" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-white transition-all disabled:opacity-50">导出</button>
+        <button @click="onImportClick" :disabled="isBusy || currentTab === 'avatars'" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs text-white transition-all disabled:opacity-50">导入</button>
         <input ref="importInput" type="file" accept="application/json" class="hidden" @change="handleImport" />
         <router-link to="/" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm text-white transition-all flex items-center gap-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>
@@ -218,14 +304,21 @@ const onAddClick = async () => {
       >
         昵称库
       </button>
+      <button
+        @click="currentTab = 'avatars'"
+        class="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+        :class="currentTab === 'avatars' ? 'bg-[#7A9D8C] text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'"
+      >
+        头像库
+      </button>
     </div>
 
     <!-- Main Content -->
     <div class="flex-1 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden flex flex-col shadow-2xl relative transition-colors duration-500">
       
       <!-- Add Input -->
-      <div class="p-6 border-b border-white/10 bg-black/10 relative z-10">
-        <div class="flex gap-4">
+       <div class="p-6 border-b border-white/10 bg-black/10 relative z-10">
+        <div v-if="currentTab !== 'avatars'" class="flex gap-4">
           <input 
             v-model="newContent"
             @keyup.enter="onAddClick"
@@ -242,12 +335,38 @@ const onAddClick = async () => {
             添加
           </button>
         </div>
+        <div v-else class="flex items-center justify-between gap-4">
+          <div>
+            <p class="text-sm text-white/80">头像库管理</p>
+            <p class="text-xs text-white/30">自定义头像最多 100 个，单张不超过 5MB</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-white/40">{{ customAvatarCount }}/100</span>
+            <button 
+              @click="triggerAvatarUpload"
+              :disabled="isUploading || !canUploadMore"
+              class="px-4 py-2 text-white rounded-xl text-xs font-semibold shadow-lg transition-all disabled:opacity-50"
+              :class="canUploadMore ? 'bg-[#7A9D8C] hover:bg-[#6B8E78]' : 'bg-white/10'
+              "
+            >
+              {{ isUploading ? '上传中...' : '上传头像' }}
+            </button>
+            <input
+              ref="avatarUploadInput"
+              type="file"
+              accept="image/*"
+              @change="handleAvatarUpload"
+              class="hidden"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- List -->
       <div class="flex-1 overflow-y-auto p-6 scrollbar-hide relative z-10">
         <!-- 语料库：列表形式 -->
         <div v-if="currentTab === 'dialogues'" class="space-y-3">
+
           <div 
             v-for="item in dialogueItems" 
             :key="item._id || item.id"
@@ -277,7 +396,7 @@ const onAddClick = async () => {
         </div>
 
         <!-- 昵称库：标签形式 -->
-        <div v-else class="pb-4">
+        <div v-else-if="currentTab === 'nicknames'" class="pb-4">
           <NicknameGrid 
             :items="nicknameItems" 
             :mode="corpusStore.mode"
@@ -285,6 +404,35 @@ const onAddClick = async () => {
           />
           <div v-if="nicknameItems.length === 0" class="text-center py-20 text-white/20 text-sm">
             暂无昵称，请添加
+          </div>
+        </div>
+
+        <!-- 头像库 -->
+        <div v-else class="space-y-6">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-white/30">当前 {{ customAvatarCount }} 个</span>
+          </div>
+
+          <div v-if="customAvatars.length" class="grid grid-cols-6 gap-4">
+            <div
+              v-for="avatar in customAvatars"
+              :key="avatar.id"
+              class="group relative aspect-square rounded-2xl overflow-hidden border border-white/10"
+            >
+              <img :src="avatar.url" class="w-full h-full object-cover" />
+              <button
+                @click="handleDeleteAvatar(avatar.id)"
+                :disabled="!canDeleteAvatar"
+                class="absolute top-2 right-2 bg-black/50 hover:bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M8 6v12m8-12v12M5 6l1-2h12l1 2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-center py-20 text-white/20 text-sm">
+            暂无头像，请上传
           </div>
         </div>
       </div>
