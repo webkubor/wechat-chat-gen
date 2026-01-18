@@ -110,8 +110,14 @@ onMounted(() => {
           <span class="text-[10px] text-[#7A9D8C] font-black uppercase tracking-[0.2em]">New Update</span>
           <p class="text-sm text-white/90 font-medium leading-tight mt-0.5">v{{ newVersion }} 已经发布</p>
           <p class="text-[11px] text-white/40 mt-1">包含交互优化与系统稳定性提升</p>
+          <router-link
+            to="/changelog"
+            class="inline-block mt-2 text-[10px] text-[#7A9D8C] hover:text-[#6B8E78] underline underline-offset-2 transition-colors"
+          >
+            查看更新详情 →
+          </router-link>
         </div>
-        <button 
+        <button
           @click="handleRefresh"
           class="w-full sm:w-auto bg-[#7A9D8C] hover:bg-[#6B8E78] text-white text-xs font-bold px-6 py-2.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-[#7A9D8C]/20"
         >
