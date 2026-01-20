@@ -4,6 +4,7 @@ import { useCorpusStore } from './corpus'
 import { localDB } from '../utils/localdb'
 import { PRESET_DIALOGUES, PRESET_NAMES, PRESET_SYSTEMS } from '../config/presets'
 import { useAvatarStore } from './avatar'
+import { randomAvatarService } from '../utils/randomAvatar'
 import { type ChatMessage, type DeviceType, type StatusBarTheme, type PreviewTheme, type ExportRatio, type ChatSession } from '../types/database'
 import defaultBg from '../assets/bg.jpg'
 
@@ -156,21 +157,12 @@ export const useChatStore = defineStore('chat', {
     getRandomUser() {
       const name = PRESET_NAMES[Math.floor(Math.random() * PRESET_NAMES.length)] || '用户'
 
-      // 优先使用网图随机头像（如果启用）
       const randomAvatarEnabled = localStorage.getItem('randomAvatarEnabled') !== 'false'
       if (randomAvatarEnabled) {
-        // 使用GitHub头像作为fallback
-        const fallbackAvatars = [
-          'https://avatars.githubusercontent.com/u/1?v=4',
-          'https://avatars.githubusercontent.com/u/2?v=4',
-          'https://avatars.githubusercontent.com/u/3?v=4',
-          'https://avatars.githubusercontent.com/u/4?v=4',
-        ]
-        const avatar = fallbackAvatars[Math.floor(Math.random() * fallbackAvatars.length)]!
+        const avatar = randomAvatarService.generateRandomAvatar()
         return { name, avatar }
       }
 
-      // 使用自定义头像作为fallback
       const avatarStore = useAvatarStore()
       const avatarPool = avatarStore.customAvatars.length
         ? avatarStore.customAvatars.map(item => item.url)
