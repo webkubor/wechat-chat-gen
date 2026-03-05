@@ -1,12 +1,14 @@
-import { DB_STORES, type ChatSession, type PreviewQueueItem, type AvatarItem } from '../types/database'
+import { DB_STORES, type ChatSession, type PreviewQueueItem, type AvatarItem, type MomentsSession } from '../types/database'
 
 const DB_NAME = 'wechat_gen_db'
-const DB_VERSION = 6 // 升级版本以增加头像库
+const DB_VERSION = 8 // 升级版本以增加朋友圈模式
 const STORE_CORPUS = DB_STORES.CORPUS
 const STORE_NICKNAMES = DB_STORES.NICKNAMES
 const STORE_CHAT = DB_STORES.CHAT_HISTORY
 const STORE_PREVIEW_QUEUE = DB_STORES.PREVIEW_QUEUE
 const STORE_AVATARS = DB_STORES.AVATARS
+const STORE_CHAT_LIST = DB_STORES.CHAT_LIST
+const STORE_MOMENTS = DB_STORES.MOMENTS
 const STORE_RESOURCES = 'resources' // 新增图片资源表
 
 class LocalDB {
@@ -46,6 +48,16 @@ class LocalDB {
         // 新增资源库：存储 File/Blob 对象
         if (!db.objectStoreNames.contains(STORE_RESOURCES)) {
           db.createObjectStore(STORE_RESOURCES, { keyPath: 'id' })
+        }
+
+        // 新增群聊列表存储
+        if (!db.objectStoreNames.contains(STORE_CHAT_LIST)) {
+          db.createObjectStore(STORE_CHAT_LIST, { keyPath: 'key' })
+        }
+
+        // 新增朋友圈存储
+        if (!db.objectStoreNames.contains(STORE_MOMENTS)) {
+          db.createObjectStore(STORE_MOMENTS, { keyPath: 'key' })
         }
       }
       
@@ -271,6 +283,57 @@ class LocalDB {
       tx.objectStore(STORE_PREVIEW_QUEUE).clear()
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  // --- 群聊列表 API ---
+
+  async saveChatListSession(data: { key?: string, config: any, items: any[], updated_at: Date }): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_CHAT_LIST, 'readwrite')
+      tx.objectStore(STORE_CHAT_LIST).put({ ...data, key: 'current' })
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  async loadChatListSession(): Promise<{ config: any, items: any[] } | null> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_CHAT_LIST, 'readonly')
+      const req = tx.objectStore(STORE_CHAT_LIST).get('current')
+      req.onsuccess = () => {
+        const result = req.result
+        if (result) {
+          resolve({ config: result.config, items: result.items })
+        } else {
+          resolve(null)
+        }
+      }
+      req.onerror = () => reject(req.error)
+    })
+  }
+
+  // --- 朋友圈 API ---
+
+  async saveMomentsSession(data: MomentsSession): Promise<void> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_MOMENTS, 'readwrite')
+      tx.objectStore(STORE_MOMENTS).put({ ...data, key: 'current' })
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  }
+
+  async loadMomentsSession(): Promise<MomentsSession | null> {
+    const db = await this.getDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_MOMENTS, 'readonly')
+      const req = tx.objectStore(STORE_MOMENTS).get('current')
+      req.onsuccess = () => resolve((req.result as MomentsSession) || null)
+      req.onerror = () => reject(req.error)
     })
   }
 }

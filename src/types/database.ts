@@ -73,11 +73,62 @@ export interface AvatarItem {
   created_at: Date | any
 }
 
+// --- 群聊列表项 ---
+export interface ChatListItem {
+  id: string
+  title: string
+  lastMessage: string
+  lastSender: string
+  time: string
+  avatars: string[]
+  unreadCount?: number
+  isPinned?: boolean
+}
+
+// --- 朋友圈评论 ---
+export interface MomentsComment {
+  id: string
+  userName: string
+  content: string
+}
+
+// --- 朋友圈动态 ---
+export interface MomentsPost {
+  id: string
+  userName: string
+  avatar: string
+  content: string
+  images: string[]
+  location: string
+  time: string
+  likes: string[]
+  comments: MomentsComment[]
+}
+
+// --- 朋友圈配置 ---
+export interface MomentsConfig {
+  ownerName: string
+  ownerAvatar: string
+  postCount: number
+  topics: string[]
+  locations: string[]
+}
+
+// --- 朋友圈会话 ---
+export interface MomentsSession {
+  key: 'current'
+  config: MomentsConfig
+  posts: MomentsPost[]
+  updated_at: Date | any
+}
+
 // --- 集合与表名常量 ---
 export const DB_STORES = {
   CORPUS: 'corpus',
   NICKNAMES: 'nicknames',
   CHAT_HISTORY: 'chat_history',
   PREVIEW_QUEUE: 'preview_queue',
-  AVATARS: 'avatars'
+  AVATARS: 'avatars',
+  CHAT_LIST: 'chat_list',
+  MOMENTS: 'moments_feed'
 } as const

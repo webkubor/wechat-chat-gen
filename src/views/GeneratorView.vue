@@ -1,13 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useChatStore } from '../stores/chat'
+import { useChatListStore } from '../stores/chatList'
 import DeviceFrame from '../components/DeviceFrame.vue'
+import MomentsFrame from '../components/MomentsFrame.vue'
 import ChatView from '../components/ChatView.vue'
+import ChatListView from '../components/ChatListView.vue'
+import MomentsView from '../components/MomentsView.vue'
 import ConfigPanel from '../components/ConfigPanel.vue'
 import ConfigFooter from '../components/config/ConfigFooter.vue'
 
 const chatStore = useChatStore()
+const chatListStore = useChatListStore()
 const isEditorOpen = ref(false) // 移动端控制编辑器展开/收起
+
+// 当前模式由 ConfigPanel 控制，这里需要获取它
+const currentMode = ref<'chat' | 'join' | 'list' | 'moments'>('chat')
+
+// 是否显示列表视图
+const isListMode = computed(() => currentMode.value === 'list')
+const isMomentsMode = computed(() => currentMode.value === 'moments')
 
 const toggleEditor = () => {
   isEditorOpen.value = !isEditorOpen.value
@@ -15,7 +27,13 @@ const toggleEditor = () => {
 
 onMounted(() => {
   chatStore.init()
+  chatListStore.init()
 })
+
+// 监听模式变化（通过事件从 ConfigPanel 传递）
+const handleModeChange = (mode: 'chat' | 'join' | 'list' | 'moments') => {
+  currentMode.value = mode
+}
 </script>
 
 <template>
@@ -25,8 +43,12 @@ onMounted(() => {
       <!-- 预览容器：移动端全屏铺满，不使用 scale；PC端保持 1:1 或微调 -->
       <div class="w-full h-full lg:w-auto lg:h-auto flex items-center justify-center transition-all duration-500">
         <div class="w-full h-full lg:w-auto lg:h-auto lg:transform lg:scale-95 xl:scale-100 drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-          <DeviceFrame>
-            <ChatView />
+          <MomentsFrame v-if="isMomentsMode">
+            <MomentsView />
+          </MomentsFrame>
+          <DeviceFrame v-else>
+            <ChatListView v-if="isListMode" />
+            <ChatView v-else />
           </DeviceFrame>
         </div>
       </div>
@@ -75,7 +97,7 @@ onMounted(() => {
       
       <!-- Scrollable Content -->
       <div class="flex-1 overflow-y-auto p-6 lg:p-10 scrollbar-hide">
-        <ConfigPanel />
+        <ConfigPanel @modeChange="handleModeChange" />
         <ConfigFooter />
       </div>
     </div>
